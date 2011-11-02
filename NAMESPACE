@@ -1,0 +1,3 @@
+useDynLib(MigClim)
+export(MigClim.migrate)
+export(Biomod2ascii)
