@@ -1,7 +1,7 @@
 #
 # MigClim.R: The R functions for the MigClim package.
 #
-# Robin Engler & Wim Hordijk   Last modified: 18 October 2011
+# Robin Engler & Wim Hordijk   Last modified: 06 December 2011
 #
 
 
@@ -425,133 +425,81 @@ MigClim.migrate <- function (initDistrFile="InitialDist", hsMapFile="HSmap",
 }
 
 
-#
-# Biomod2ascii: Convert the output from BIOMOD (a dataframe with projections)
-#               to ASCII Grids.
-#
-Biomod2ascii <- function (dataFrameOrFileName, XYcoord, ColumnsToConvert=NULL,
-                          projName="", inDir="", outDir="")
-{
-  #
-  # Load SDMTools library.
-  #
-  if (require(SDMTools, quietly=T)==F)
-  {
-    stop("This function requires the 'SDMTools' package. Please install 'SDMTools' on your computer and try again.")
-  }
-	 
-  #
-  # Load data.
-  #
-  if (is.character(dataFrameOrFileName))
-  {
-    #
-    # Verify the file exists on disk.
-    #
-    if (inDir != "")
-    {
-      FileN <- paste(inDir, "/", dataFrameOrFileName, sep="")
-    }
-    else
-    {
-      FileN <- dataFrameOrFileName
-    }
-    if (!file.exists(FileN))
-    {
-      stop("The following file could not be found on disk: ", FileN)
-    }
-		
-    #
-    # The file needs to be loaded differently whether it is a txt file or
-    # an "Rdata" file.
-    #
-    if (substr(FileN,nchar(FileN)-3,nchar(FileN)) == ".txt")
-    {
-      DF <- read.table(FileN, h=T)
-    }
-    else
-    {
-      L1 <- c(ls(), "L1")
-      load(FileN)
-      L2 <- ls()
-      DF <- eval(parse(text=L2[-match(L1,L2)]))
-      rm(list=ls()[which(ls()==L2[-match(L1,L2)])])
-      rm(L1,L2)
-    }
-    rm(FileN)
-  }
-  else
-  {
-    DF <- dataFrameOrFileName
-  }
 
-  #
-  # Keep only the two first dimensions of the dataframe/matrix.
-  #
-  if (length(dim(DF))==4)
-  {
-    DF <- DF[,,1,1]
-  }
-  if (length(dim(DF))==3)
-  {
-    DF <- DF[,,1]
-  }
-  if (is.matrix(DF))
-  {
-    DF <- as.data.frame(DF)  # if matrix, convert to dataframe.
-  }
+
+
+MigClim.plot <- function(asciiFile, outDir="", fileFormat="jpeg", fullOutput=FALSE){
 	
-  #
-  # Keep only the user-defined columns.
-  #
-  if (is.numeric(ColumnsToConvert))
-  {
-    if (any(ColumnsToConvert<1) | any(ColumnsToConvert>ncol(DF)))
-    {
-      stop("One or more column values in 'ColumnsToConvert' are out of range.")
-    }
-  }
-  if (is.character(ColumnsToConvert))
-  {
-    if (any(is.na(match(ColumnsToConvert, names(DF)))))
-    {
-      stop("One or more column values in 'ColumnsToConvert' do not match with the column names of your input data.")
-    }
-  }
-  if (!is.null(ColumnsToConvert))
-  {
-    DF <- DF[,ColumnsToConvert]
-  }
 	
-  #
-  # The "dataframe2asc" function actually requires the coordinates to be given
-  # in the order Y, X.
-  #
-  XYcoord <- XYcoord[,c(2,1)]
+	### Verify user input
+	if(substr(asciiFile, nchar(asciiFile)-3, nchar(asciiFile))!=".asc") asciiFile <- paste(asciiFile, ".asc", sep="")
+	if(fileFormat!="jpeg" & fileFormat!="png" & fileFormat!="inR") stop("Input error: 'fileFormat' must be one of 'jpeg' or 'png'.\n")
+	if(!file.exists(asciiFile)) stop("Input error: ", asciiFile, " could not be found.\n")
+	if(outDir!="") if(!file.exists(outDir)) stop("Input error: 'outDir' directory could not be found.\n")
 	
-  #
-  # Save data as ASCII grid.
-  #
-  if (nrow(XYcoord)!=nrow(DF))
-  {
-    stop("Numbers of rows of your projection data does not match number of rows of 'XYcoord'")
-  }
-  if (outDir=="")
-  {
-    outDir <- getwd()
-  }
-  else
-  {
-    outDir <- paste(getwd(), "/", outDir, sep="")
-  }
-  if (!file.exists(outDir))
-  {
-    stop("The specified output directory is invalid or does not exist!")
-  }
+	### load raster library
+	if(require(raster, quietly=T)==F) stop("This function requires the 'raster' package. Please install 'raster' on your computer and try again.")
 	
-  if (ncol(DF)>1 | projName=="")
-  {
-    projName <- paste(projName, names(DF), sep="")
-  }
-  dataframe2asc(cbind(XYcoord,DF), outdir=outDir, filenames=projName, gz=FALSE)
+	### get root name and output directory
+	rootName <- substr(basename(asciiFile), 1, nchar(basename(asciiFile))-11)
+	if(outDir=="" & dirname(asciiFile)!=".") outDir <- dirname(asciiFile)
+	outDir <- paste(outDir,"/",sep="")
+	inDir <- paste(dirname(asciiFile),"/",sep="")
+	if(inDir=="./") inDir <- ""
+	
+	### get all files
+	if(fullOutput){
+		stepName <- paste(rootName, "_step_", sep="")
+		fileList <- list.files(dirname(asciiFile))
+		fileList <- fileList[which(substr(fileList, 1, nchar(stepName))==stepName)]
+		fileList <- c(basename(asciiFile), fileList)
+		rm(stepName)
+	} else fileList <- basename(asciiFile)
+	fileList <- substr(fileList,1,nchar(fileList)-4) # remove ".asc" extension.
+	
+	for(fileName in fileList){
+		
+		#fileName <- fileList[1]
+		cat("plotting data for", paste(fileName,".asc",sep=""), "\n")
+		Rst <- raster(paste(inDir,fileName,".asc",sep=""))
+		
+		### Create color ramp
+		rstVals <- sort(raster::unique(Rst))
+		negativeNb <- length(which(rstVals<0))
+		positiveNb <- length(which(rstVals>1 & rstVals<30000))
+		zeroExists <- any(rstVals==0)
+		oneExists <- any(rstVals==1)
+		unilimtedExists <- any(rstVals==30000)
+		Colors <- rep("yellow", negativeNb)
+		if(zeroExists) Colors <- c(Colors, "white")
+		if(oneExists) Colors <- c(Colors, "black")
+		Colors <- c(Colors, rainbow(positiveNb, start=0, end=0.4))
+		if(unilimtedExists) Colors <- c(Colors, "pink")
+		
+		### Create a graphic window that has the correct ratio (to match the map)
+		#x11(width=7, height=7*((ymax(Rst)-ymin(Rst))/(xmax(Rst)-xmin(Rst))))
+		#image(Rst, col=Colors, breaks=c(min(rstVals)-1,rstVals))
+		#savePlot(filename= "mcTest_raster", type = "jpeg", device = dev.cur(), restoreConsole = TRUE)
+		
+		### Plot
+		if(fileFormat=="jpeg"){
+			jpeg(filename=paste(outDir,fileName,".jpg",sep=""), width = 2000, height = 2000*((ymax(Rst)-ymin(Rst))/(xmax(Rst)-xmin(Rst))), quality=90, res=300)
+			image(Rst, col=Colors, breaks=c(min(rstVals)-1,rstVals))
+			dev.off()
+		}
+		if(fileFormat=="png"){
+			png(filename=paste(outDir,fileName,".png",sep=""), width = 2000, height = 2000*((ymax(Rst)-ymin(Rst))/(xmax(Rst)-xmin(Rst))), res=300)
+			image(Rst, col=Colors, breaks=c(min(rstVals)-1,rstVals))
+			dev.off()
+		}
+		if(fileFormat=="inR"){
+			x11(width=7, height=7*((ymax(Rst)-ymin(Rst))/(xmax(Rst)-xmin(Rst))))
+			image(Rst, col=Colors, breaks=c(min(rstVals)-1,rstVals))
+		}
+		
+		### Release memory
+		rm(Rst,rstVals,negativeNb,positiveNb,zeroExists,oneExists,unilimtedExists,Colors)
+	}
+	
 }
+
