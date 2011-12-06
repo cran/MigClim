@@ -1,5 +1,5 @@
 Package: MigClim
-Version: 0.2
+Version: 0.3
 Date: 2011-12-06
 Title: Simulating migration under climate change
 Author: Robin Engler <robin.engler@gmail.com> and
@@ -9,6 +9,6 @@ Depends: SDMTools, raster
 Description: Functions for simulating species migration
              under climate change scenarios.
 License: GPL
-Packaged: 2011-12-06 09:19:27 UTC; whordijk
+Packaged: 2011-12-28 01:35:45 UTC; robin
 Repository: CRAN
-Date/Publication: 2011-12-06 17:09:17
+Date/Publication: 2011-12-30 11:22:35

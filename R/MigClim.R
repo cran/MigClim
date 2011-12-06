@@ -1,7 +1,7 @@
 #
 # MigClim.R: The R functions for the MigClim package.
 #
-# Robin Engler & Wim Hordijk   Last modified: 06 December 2011
+# Robin Engler & Wim Hordijk   Last modified: 23 December 2011
 #
 
 
@@ -125,6 +125,7 @@ MigClim.migrate <- function (initDistrFile="InitialDist", hsMapFile="HSmap",
 	
 	### Convert all input data to data frame objects.
 	if(is.matrix(hsMapFile)) hsMapFile <- as.data.frame(hsMapFile)
+	if(is.vector(hsMapFile)) hsMapFile <- as.data.frame(hsMapFile)
 	if(is.character(barrierFile)) useBarrier <- FALSE else useBarrier <- TRUE
 	if(is.matrix(barrierFile)) barrierFile <- as.data.frame(barrierFile)
 	if(is.vector(barrierFile)) barrierFile <- as.data.frame(barrierFile)
