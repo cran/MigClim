@@ -1,7 +1,7 @@
 \name{MigClim.migrate}
 \alias{MigClim.migrate}
 \title{Initialize and run the MigClim simulation}
-\description{Initialize the MigClim simulation by passing the relevant
+\description{Initialize the main MigClim simulation by passing the relevant
   parameter values, which will be written to a parameter file. The
   simulation is then run with these parameter values.}
 \usage{MigClim.migrate (initDistrFile="InitialDist", hsMapFile="HSmap",
@@ -31,14 +31,7 @@
   \item{keepTempFiles}{If 'FALSE' (default), then any ".asc" file created from a conversion process in the function will be deleted when simulation is completed. If you wish to keep these files then set the value of this parameter to 'TRUE'.}
 }
 \details{The input data for initial distribution ('initDistrFile'), habitat suitability ('hsMapFile'), and (optionally) barriers ('barrierFile') can be provided as either a string giving the name of a raster file (located in the working directory) or as a data frame object. For a given simulation, all these inputs must be given in the same format.
-Option 1: Input data provided as raster file.
-          In this case, the input must be a string that contains the name of the raster file that is located in the working directory. The following raster formats are supported:
-           - ascii GRID (files must have a '.asc' extension).
-           - R rasterLayer (see 'raster' package).
-           - ESRI GRID.
-           - GeoTIFF (files must have a '.tif' extension).
-
-Note that all input grids need to have exactly the same size (i.e., the same number of rows and the same number of columns).
+Option 1: Input data provided as raster file. In this case, the input must be a string that contains the name of the raster file that is located in the working directory. The following raster formats are supported: (i) ascii GRID (files must have a '.asc' extension), (ii) R rasterLayer (see 'raster' package), (iii) ESRI GRID, (iv) GeoTIFF (files must have a '.tif' extension). Note that all input grids need to have exactly the same size (i.e., the same number of rows and the same number of columns).
 
 The standard ESRI ASCII Raster format looks as follows (actual values depend on file content):
 \preformatted{ncols         100
@@ -53,29 +46,29 @@ nodata_value -9999
 :
 }
 
-Option 2: Input data provided as data frames.
-          It is important to note that, unlike when inputing data in a raster format, inputing it as data frames requires to provide the actual data frame object to the function, not a string indicating its name. 'initDistrFile' shoud have 3 colums (in this order): X coordinate, Y coordinate and initial distribution of the species (only values of 0 or 1 are accpted. 1 = species present, 0 = species absent.
-\preformatted{Xcoordinate     Ycoordinate     IniDist
-520000     200100     1
-520050     200100     1
-520100     200100     0
+Option 2: Input data provided as data frames. It is important to note that, unlike when inputing data in a raster format, inputing it as data frames requires to provide the actual data frame object to the function, not a string indicating its name. 'initDistrFile' shoud have 3 colums (in this order): X coordinate, Y coordinate and initial distribution of the species (only values of 0 or 1 are accpted. 1 = species present, 0 = species absent.
+\preformatted{Xcoordinate  Ycoordinate IniDist
+520000       200100      1
+520050       200100      1
+520100       200100      0
 ...
 }
           'hsMapFile' shoud have a number of colums equal to 'nrEnvChgSteps'. Each column giving the suitability of the habitat for a given environmental change step (in chronological order). Values of habitat suitability must be in the range [0:1000]
-\preformatted{HSmap1     HSmap2     HSmap3     ...
+\preformatted{
+HSmap1  HSmap2  HSmap3  ...
 789     800     230     ...
 560     720     150     ...
-120     540     86     ...
+120     540      86     ...
 ...
 }
 
-         'barrierFile' is optional and must have only one column (it can also be a vector). It must contain only values of either 1 (pixel is a barrier feature) or 0 (pixel is not a barrier feature).
+'barrierFile' is optional and must have only one column (it can also be a vector). It must contain only values of either 1 (pixel is a barrier feature) or 0 (pixel is not a barrier feature).
 
 The function output(s) will be written in ascii GRID format.
 }
 \value{The number of environmental change steps performed. The function also writes the following outputs into the current working directory: an ESRI ASCII Raster file named 'simulName'+'_raster.asc' that contains the final state of the simulation, an 'simulName'+'_stats.txt' file that contains the simulation's outputs after each dispersal event, and an 'simulName'+'_summary.txt' file that contains a single-line summary of the entire simulation.  state matrix is written as an ESRI ASCII Raster file with the file name given as the value of the 'outFile' argument in the MigClim.init function, with the extension '_raster.asc' added. The output file 'simulName' + '_stats.txt' contains summary statistics for each individual dispersal step. The output file 'simulName' + '_summary.txt' contains summary statistics over the entire simulation (including the running time in seconds).}
 \references{Engler R., Guisan A., 2009. MIGCLIM: Predicting plant distribution and dispersal in a changing climate. Diversity and Distributions 15(4), 590-601.}
-\seealso{Biomod2ascii ()}
+\seealso{MigClim.plot ()}
 \examples{
   data(MigClim.TestData)
 

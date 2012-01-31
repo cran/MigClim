@@ -1,7 +1,7 @@
 /*
 ** migrate.c: Implementation of the main MigClim function.
 **
-** Wim Hordijk   Last modified: 05 October 2011
+** Wim Hordijk   Last modified: 24 January 2012
 **
 ** This C code is based on the original Visual Basic code of Robin Engler.
 */
@@ -325,13 +325,13 @@ void mcMigrate (char **paramFile, int *nrFiles)
   ** The environmental change loop (if simulation is run without change in
   ** environment this loop runs only once).
   */
-  Rprintf ("running MigClim");
+  Rprintf ("Running MigClim.\n");
   for (envChgStep = 1; envChgStep <= nrEnvChgSteps; envChgStep++)
   {
     /*
     ** Print the current environmental change iteration.
     */
-    Rprintf ("...%d", envChgStep);
+    Rprintf ("  %d...\n", envChgStep);
 
     /*
     ** Update and reclassify the habitat suitability matrix.
@@ -722,7 +722,7 @@ void mcMigrate (char **paramFile, int *nrFiles)
       }
     }
   } /* END OF: envChgStep */
-  Rprintf ("\n");
+  Rprintf ("done.\n");
   
   /*
   ** Update currentState matrix for pixels that are suitable but

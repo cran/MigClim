@@ -1,7 +1,7 @@
 #
 # MigClim.R: The R functions for the MigClim package.
 #
-# Robin Engler & Wim Hordijk   Last modified: 23 December 2011
+# Robin Engler & Wim Hordijk   Last modified: 25 January 2012
 #
 
 
@@ -504,3 +504,41 @@ MigClim.plot <- function(asciiFile, outDir="", fileFormat="jpeg", fullOutput=FAL
 	
 }
 
+
+#
+# MigClim.genClust: Run the genetic clusters migration simulation.
+#
+MigClim.genClust <- function (hsMapFile="hsMap", barrierFile="barrier",
+                              nrClusters=4, nrIterations=1, threshold=445,
+                              outFile="out", initFile="")
+{
+  #
+  # Get the number of rows and columns from the first input file.
+  #
+  Rst <- raster(paste(hsMapFile,"1.asc",sep=""))
+  nrRows <- nrow(Rst)
+  nrCols <- ncol(Rst)
+
+  #
+  # Call the genClust C function.
+  #
+  migrator <- .C("genClust", as.integer(nrRows), as.integer(nrCols),
+                 as.integer(nrClusters), as.integer(nrIterations),
+                 as.integer(threshold), hsMapFile, barrierFile, outFile,
+                 initFile)
+}
+
+
+#
+# MigClim.validate: Validate a genetic clusters migration output file.
+#
+MigClim.validate <- function (validateFile="Validation.txt", nrPoints=0,
+                              simFile="out1.asc", nrClusters=4)
+{
+  #
+  # Call the validation C function.
+  #
+  validate <- .C("validate", validateFile, as.integer(nrPoints), simFile,
+                 as.integer(nrClusters), score=double(2))
+  return (validate$score)
+}

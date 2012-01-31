@@ -10,4 +10,4 @@
   \item{fullOutput}{If "TRUE" then all the intermediate ouputs for the given simulation are also plotted and saved to disk.}
 }
 \value{The function does not return any value but saves "jpeg" or "png" image files to disk.}
-
+\seealso{MigClim.migrate ()}

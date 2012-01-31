@@ -1,7 +1,7 @@
 /*
 ** file_io.c: Functions for file input/output.
 **
-** Wim Hordijk   Last modified: 05 October 2011
+** Wim Hordijk   Last modified: 23 January 2012
 */
 
 #include "migclim.h"
@@ -610,6 +610,206 @@ int mcWriteMatrix (char *fname, int **mat)
   fprintf (fp, "yllcorner 0\n");
   fprintf (fp, "cellsize 10\n");
   fprintf (fp, "nodata_value -9999\n");
+  
+  /*
+  ** Write the data to file.
+  */
+  for (i = 0; i < nrRows; i++)
+  {
+    for (j = 0; j < nrCols; j++)
+    {
+      fprintf(fp, "%d ", mat[i][j]);
+    }
+    fprintf (fp, "\n");
+  }
+
+  /*
+  ** Close the file and return the status.
+  */
+ End_of_Routine:
+  if (fp != NULL)
+  {
+    fclose (fp);
+  }
+  return (status);
+}
+
+
+/*
+** readMat: Read a data matrix from file.
+**
+** Note: This should eventually be merged with the above "mcReadMatrix"
+**       function, but we'll keep it separate for now just to make sure
+**       the basic functionality works fine.
+**
+** Parameters:
+**   - fName:  The name of the file to read from.
+**   - mat:    The matrix to put the data in (assumed to be large enough).
+**
+** Returns:
+**   - If everything went fine:  0.
+**   - Otherwise:               -1.
+*/
+
+int readMat (char *fName, int **mat)
+{
+  int   i, j, intVal, status;
+  char  line[1024], param[128], dblVal[128];
+  FILE *fp;
+
+  status = 0;
+  fp = NULL;
+  
+  /*
+  ** Open the file for reading.
+  */
+  if ((fp = fopen(fName, "r")) == NULL)
+  {
+    status = -1;
+    Rprintf ("Can't open data file %s\n", fName);
+    goto End_of_Routine;
+  }
+
+  /*
+  ** Get the 'meta data'.
+  */
+  if ((fgets (line, 1024, fp) == NULL) ||
+      (sscanf (line, "%s %d\n", param, &intVal) != 2) ||
+      (strcasecmp (param, "ncols") != 0))
+  {
+    status = -1;
+    Rprintf ("'ncols' expected in data file %s.\n", fName);
+    goto End_of_Routine;
+  }
+  if (intVal != nrCols)
+  {
+    status = -1;
+    Rprintf ("Invalid number of columns in data file %s\n", fName);
+    goto End_of_Routine;
+  }
+  if ((fgets (line, 1024, fp) == NULL) ||
+      (sscanf (line, "%s %d\n", param, &intVal) != 2) ||
+      (strcasecmp (param, "nrows") != 0))
+  {
+    status = -1;
+    Rprintf ("'nrows' expected in data file %s\n", fName);
+    goto End_of_Routine;
+  }
+  if (intVal != nrRows)
+  {
+    status = -1;
+    Rprintf ("Invalid number of rows in data file %s.\n", fName);
+    goto End_of_Routine;
+  }
+  if ((fgets (line, 1024, fp) == NULL) ||
+      (sscanf (line, "%s %s\n", param, dblVal) != 2) ||
+      (strcasecmp (param, "xllcorner") != 0))
+  {
+    status = -1;
+    Rprintf ("'xllcorner' expected in data file %s\n", fName);
+    goto End_of_Routine;
+  }
+  xllCorner = strtod (dblVal, NULL);
+  if ((fgets (line, 1024, fp) == NULL) ||
+      (sscanf (line, "%s %s\n", param, dblVal) != 2) ||
+      (strcasecmp (param, "yllcorner") != 0))
+  {
+    status = -1;
+    Rprintf ("'yllcorner' expected in data file %s\n", fName);
+    goto End_of_Routine;
+  }
+  yllCorner = strtod (dblVal, NULL);
+  if ((fgets (line, 1024, fp) == NULL) ||
+      (sscanf (line, "%s %s\n", param, dblVal) != 2) ||
+      (strcasecmp (param, "cellsize") != 0))
+  {
+    status = -1;
+    Rprintf ("'cellsize' expected in data file %s\n", fName);
+    goto End_of_Routine;
+  }
+  cellSize = strtod (dblVal, NULL);
+  if ((fgets (line, 1024, fp) == NULL) ||
+      (sscanf (line, "%s %d\n", param, &noData) != 2) ||
+      (strcasecmp (param, "nodata_value") != 0))
+  {
+    status = -1;
+    Rprintf ("'nodata_value' expected in data file %s\n", fName);
+    goto End_of_Routine;
+  }
+  
+  /*
+  ** Read the values into the matrix.
+  */
+  for (i = 0; i < nrRows; i++)
+  {
+    for (j = 0; j < nrCols; j++)
+    {
+      if (fscanf(fp, "%d", &intVal) != 1)
+      {
+	status = -1;
+	Rprintf ("Invalid value in data file %s\n", fName);
+	goto End_of_Routine;
+      }
+      mat[i][j] = intVal;
+    }
+    intVal = fscanf (fp, "\n");
+  }
+
+ End_of_Routine:
+  /*
+  ** Close the file and return the status.
+  */
+  if (fp != NULL)
+  {
+    fclose (fp);
+  }
+  return (status);
+}
+
+
+/*
+** writeMat: Write a data matrix to file.
+**
+** Note: This should eventually be merged with the above "mcWriteMatrix"
+**       function, but we'll keep it separate for now just to make sure
+**       the basic functionality works fine.
+**
+** Parameters:
+**   - fName:  The name of the file to write to.
+**   - mat:    The data matrix to write.
+**
+** Returns:
+**   - If everything went fine:  0.
+**   - Otherwise:               -1.
+*/
+
+int writeMat (char *fName, int **mat)
+{
+  int   i, j, status;
+  FILE *fp;
+
+  status = 0;
+  fp = NULL;
+  
+  /*
+  ** Open the file for writing.
+  */
+  if ((fp = fopen(fName, "w")) == NULL)
+  {
+    status = -1;
+    Rprintf ("Can't open data file %s for writing.\n", fName);
+    goto End_of_Routine;
+  }
+
+  /*
+  ** Write the 'meta data'.
+  */
+  fprintf (fp, "ncols %d\n", nrCols);
+  fprintf (fp, "nrows %d\n", nrRows);
+  fprintf (fp, "xllcorner %.9f\n", xllCorner);
+  fprintf (fp, "yllcorner %.9f\n", yllCorner);
+  fprintf (fp, "cellsize %.9f\n", cellSize);
+  fprintf (fp, "nodata_value %d\n", noData);
   
   /*
   ** Write the data to file.
