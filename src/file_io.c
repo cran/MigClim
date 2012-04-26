@@ -1,7 +1,7 @@
 /*
 ** file_io.c: Functions for file input/output.
 **
-** Wim Hordijk   Last modified: 23 January 2012
+** Wim Hordijk   Last modified: 19 April 2012 by Robin
 */
 
 #include "migclim.h"
@@ -34,22 +34,23 @@ int mcInit (char *paramFile)
   */
   nrRows = 0;
   nrCols = 0;
-  strcpy (initDistrFile, "");
-  strcpy (hsMapFile, "");
-  strcpy (barrierFile, "");
+  strcpy (iniDist, "");
+  strcpy (hsMap, "");
+  strcpy (barrier, "");
   useBarrier = false;
-  barrierType = WEAK_BARRIER;
-  nrEnvChgSteps = 0;
-  nrDispSteps = 0;
+  barrierType = STRONG_BARRIER;
+  envChgSteps = 0;
+  dispSteps = 0;
   dispDist = 0;
-  initMatAge = 0;
+  iniMatAge = 0;
   fullMatAge = 0;
   rcThreshold = 0;
-  minDist = 10;
-  maxDist = 15;
+  lddMinDist = 10;
+  lddMaxDist = 15;
   lddFreq = 0.0;
   fullOutput = false;
-  strcpy (simulName, "mySimul");
+  replicateNb = 1;
+  strcpy (simulName, "MigClimTest");
   
   /*
   ** Open the file for reading.
@@ -92,10 +93,10 @@ int mcInit (char *paramFile)
 	goto End_of_Routine;
       }
     }
-    /* initDistrFile */
-    else if (strcmp (param, "initDistrFile") == 0)
+    /* iniDist */
+    else if (strcmp (param, "iniDist") == 0)
     {
-      if (sscanf (line, "initDistrFile %s", initDistrFile) != 1)
+      if (sscanf (line, "iniDist %s", iniDist) != 1)
       {
 	status = -1;
 	Rprintf ("Invalid initial distribution file name on line %d in parameter file %s\n",
@@ -103,10 +104,10 @@ int mcInit (char *paramFile)
 	goto End_of_Routine;
       }
     }
-    /* hsMapFile */
-    else if (strcmp (param, "hsMapFile") == 0)
+    /* hsMap */
+    else if (strcmp (param, "hsMap") == 0)
     {
-      if (sscanf (line, "hsMapFile %s", hsMapFile) != 1)
+      if (sscanf (line, "hsMap %s", hsMap) != 1)
       {
 	status = -1;
 	Rprintf ("Invalid habitat suitability map file name on line %d in parameter file %s\n",
@@ -114,10 +115,10 @@ int mcInit (char *paramFile)
 	goto End_of_Routine;
       }
     }
-    /* barrierFile */
-    else if (strcmp (param, "barrierFile") == 0)
+    /* barrier */
+    else if (strcmp (param, "barrier") == 0)
     {
-      if (sscanf (line, "barrierFile %s", barrierFile) != 1)
+      if (sscanf (line, "barrier %s", barrier) != 1)
       {
 	status = -1;
 	Rprintf ("Invalid barrier file name on line %d in parameter file %s\n",
@@ -152,11 +153,11 @@ int mcInit (char *paramFile)
 	goto End_of_Routine;
       }
     }
-    /* nrEnvChgSteps */
-    else if (strcmp (param, "nrEnvChgSteps") == 0)
+    /* envChgSteps */
+    else if (strcmp (param, "envChgSteps") == 0)
     {
-      if ((sscanf (line, "nrEnvChgSteps %d", &nrEnvChgSteps) != 1) ||
-	  (nrEnvChgSteps < 1))
+      if ((sscanf (line, "envChgSteps %d", &envChgSteps) != 1) ||
+	  (envChgSteps < 1))
       {
 	status = -1;
 	Rprintf ("Invalid number of environmental change steps on line %d in parameter file %s\n",
@@ -164,11 +165,11 @@ int mcInit (char *paramFile)
 	goto End_of_Routine;
       }
     }
-    /* nrDispSteps */
-    else if (strcmp (param, "nrDispSteps") == 0)
+    /* dispSteps */
+    else if (strcmp (param, "dispSteps") == 0)
     {
-      if ((sscanf (line, "nrDispSteps %d", &nrDispSteps) != 1) ||
-	  (nrDispSteps < 1))
+      if ((sscanf (line, "dispSteps %d", &dispSteps) != 1) ||
+	  (dispSteps < 1))
       {
 	status = -1;
 	Rprintf ("Invalid number of dispersal steps on line %d in parameter file %s\n",
@@ -210,11 +211,11 @@ int mcInit (char *paramFile)
       }
       p = fscanf (fp, "\n");
     }
-    /* initMatAge */
-    else if (strcmp (param, "initMatAge") == 0)
+    /* iniMatAge */
+    else if (strcmp (param, "iniMatAge") == 0)
     {
-      if ((sscanf (line, "initMatAge %d", &initMatAge) != 1) ||
-	  (initMatAge < 1))
+      if ((sscanf (line, "iniMatAge %d", &iniMatAge) != 1) ||
+	  (iniMatAge < 1))
       {
 	status = -1;
 	Rprintf ("Invalid initial maturity age on line %d in parameter file %s\n",
@@ -234,20 +235,20 @@ int mcInit (char *paramFile)
 	goto End_of_Routine;
       }
       lineNr++;
-      age = fullMatAge - initMatAge;
+      age = fullMatAge - iniMatAge;
       if (age == 0)
       {
 	age = 1;
       }
-      seedProdProb = (double *)malloc (age * sizeof (double));
-      if (fscanf (fp, "seedProdProb %f", &p) != 1)
+      propaguleProd = (double *)malloc (age * sizeof (double));
+      if (fscanf (fp, "propaguleProd %f", &p) != 1)
       {
 	status = -1;
 	Rprintf ("Seed production probabilities expected on line %d in parameter file %s\n",
 		 lineNr, paramFile);
 	goto End_of_Routine;
       }
-      seedProdProb[0] = p;
+      propaguleProd[0] = p;
       for (i = 1; i < age; i++)
       {
 	if (fscanf (fp, "%f", &p) != 1)
@@ -257,7 +258,7 @@ int mcInit (char *paramFile)
 		   lineNr, paramFile);
 	  goto End_of_Routine;
 	}
-	seedProdProb[i] = p;
+	propaguleProd[i] = p;
       }
       p = fscanf (fp, "\n");
     }
@@ -286,10 +287,10 @@ int mcInit (char *paramFile)
       }
       lddFreq = p;
     }
-    /* minDist */
-    else if (strcmp (param, "minDist") == 0)
+    /* lddMinDist */
+    else if (strcmp (param, "lddMinDist") == 0)
     {
-      if ((sscanf (line, "minDist %d", &minDist) != 1) || (minDist < 0))
+      if ((sscanf (line, "lddMinDist %d", &lddMinDist) != 1) || (lddMinDist < 0))
       {
 	status = -1;
 	Rprintf ("Invalid minimum long-distance dispersal value on line %d in parameter file %s\n",
@@ -297,10 +298,10 @@ int mcInit (char *paramFile)
 	goto End_of_Routine;
       }
     }
-    /* maxDist */
-    else if (strcmp (param, "maxDist") == 0)
+    /* lddMaxDist */
+    else if (strcmp (param, "lddMaxDist") == 0)
     {
-      if ((sscanf (line, "maxDist %d", &maxDist) != 1) || (maxDist <= minDist))
+      if ((sscanf (line, "lddMaxDist %d", &lddMaxDist) != 1) || (lddMaxDist <= lddMinDist))
       {
 	status = -1;
 	Rprintf ("Invalid maximum long-distance dispersal value on line %d in parameter file %s\n",
@@ -333,6 +334,17 @@ int mcInit (char *paramFile)
 	goto End_of_Routine;
       }
     }
+    /* replicateNb */
+    else if (strcmp (param, "replicateNb") == 0)  /* if both strings are equal, strcmp returns 0 */
+    {
+      if(sscanf(line, "replicateNb %d", &replicateNb) != 1)  /* On success, the function returns the number of variables filled.  */
+      {
+	    status = -1;
+	    Rprintf ("Invalid value for replicateNb parameter on line %d in parameter file %s\n", lineNr, paramFile);
+	    goto End_of_Routine;
+      }   
+    }
+    
     /* simulName */
     else if (strcmp (param, "simulName") == 0)
     {
@@ -370,35 +382,35 @@ int mcInit (char *paramFile)
 	     paramFile);
     goto End_of_Routine;
   }
-  if (strlen (initDistrFile) == 0)
+  if (strlen (iniDist) == 0)
   {
     status = -1;
     Rprintf ("No initial distribution file name specified in parameter file %s\n",
 	     paramFile);
     goto End_of_Routine;
   }
-  if (strlen (hsMapFile) == 0)
+  if (strlen (hsMap) == 0)
   {
     status = -1;
     Rprintf ("No habitat suitability map file name specified in parameter file %s\n",
 	     paramFile);
     goto End_of_Routine;
   }
-  if (useBarrier && (strlen (barrierFile) == 0))
+  if (useBarrier && (strlen (barrier) == 0))
   {
     status = -1;
     Rprintf ("No barrier file name specified in parameter file %s\n",
 	     paramFile);
     goto End_of_Routine;
   }
-  if (nrEnvChgSteps == 0)
+  if (envChgSteps == 0)
   {
     status = -1;
     Rprintf ("No number of environmental change steps specified in parameter file %s\n",
 	     paramFile);
     goto End_of_Routine;
   }
-  if (nrDispSteps == 0)
+  if (dispSteps == 0)
   {
     status = -1;
     Rprintf ("No number of dispersal steps specified in parameter file %s\n",
@@ -412,7 +424,7 @@ int mcInit (char *paramFile)
 	     paramFile);
     goto End_of_Routine;
   }
-  if (initMatAge == 0)
+  if (iniMatAge == 0)
   {
     status = -1;
     Rprintf ("No initial maturity age specified in parameter file %s\n",
@@ -454,7 +466,7 @@ int mcInit (char *paramFile)
 int mcReadMatrix (char *fname, int **mat)
 {
   int   i, j, val, status, noData;
-  char  line[1024], param[128];
+  char  line[1024], param[128], dblVal[128];
   FILE *fp;
 
   status = 0;
@@ -502,29 +514,32 @@ int mcReadMatrix (char *fname, int **mat)
     goto End_of_Routine;
   }
   if ((fgets (line, 1024, fp) == NULL) ||
-      (sscanf (line, "%s %d\n", param, &val) != 2) ||
+      (sscanf (line, "%s %s\n", param, dblVal) != 2) ||
       (strcasecmp (param, "xllcorner") != 0))
   {
     status = -1;
     Rprintf ("'xllcorner' expected in data file %s\n", fname);
     goto End_of_Routine;
   }
+  xllCorner = strtod (dblVal, NULL);
   if ((fgets (line, 1024, fp) == NULL) ||
-      (sscanf (line, "%s %d\n", param, &val) != 2) ||
+      (sscanf (line, "%s %s\n", param, dblVal) != 2) ||
       (strcasecmp (param, "yllcorner") != 0))
   {
     status = -1;
     Rprintf ("'yllcorner' expected in data file %s\n", fname);
     goto End_of_Routine;
   }
+  yllCorner = strtod (dblVal, NULL);
   if ((fgets (line, 1024, fp) == NULL) ||
-      (sscanf (line, "%s %d\n", param, &val) != 2) ||
+      (sscanf (line, "%s %s\n", param, dblVal) != 2) ||
       (strcasecmp (param, "cellsize") != 0))
   {
     status = -1;
     Rprintf ("'cellsize' expected in data file %s\n", fname);
     goto End_of_Routine;
   }
+  cellSize = strtod (dblVal, NULL);
   if ((fgets (line, 1024, fp) == NULL) ||
       (sscanf (line, "%s %d\n", param, &noData) != 2) ||
       (strcasecmp (param, "nodata_value") != 0))
@@ -606,9 +621,9 @@ int mcWriteMatrix (char *fname, int **mat)
   */
   fprintf (fp, "ncols %d\n", nrCols);
   fprintf (fp, "nrows %d\n", nrRows);
-  fprintf (fp, "xllcorner 0\n");
-  fprintf (fp, "yllcorner 0\n");
-  fprintf (fp, "cellsize 10\n");
+  fprintf (fp, "xllcorner %.9f\n", xllCorner);     /* WIM: I have added the variables here but somehow it seems */
+  fprintf (fp, "yllcorner %.9f\n", yllCorner);     /*      they do not get initialized as I keep getting a value of 0 */
+  fprintf (fp, "cellsize %.9f\n", cellSize);       /*      for all of them.   */
   fprintf (fp, "nodata_value -9999\n");
   
   /*

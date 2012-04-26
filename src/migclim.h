@@ -37,12 +37,13 @@
 ** many arguments all the time).
 */
 
-extern int     nrRows, nrCols, nrEnvChgSteps, nrDispSteps, dispDist, initMatAge,
-               fullMatAge, rcThreshold, barrierType, minDist, maxDist, noData;
-extern double *dispKernel, *seedProdProb, lddFreq, xllCorner, yllCorner,
+extern int     nrRows, nrCols, envChgSteps, dispSteps, dispDist, iniMatAge,
+               fullMatAge, rcThreshold, barrierType, lddMinDist, lddMaxDist, 
+               noData, replicateNb;
+extern double *dispKernel, *propaguleProd, lddFreq, xllCorner, yllCorner,
                cellSize;
-extern char    initDistrFile[128], hsMapFile[128], simulName[128],
-               barrierFile[128];
+extern char    iniDist[128], hsMap[128], simulName[128],
+               barrier[128];
 extern bool    useBarrier, fullOutput;
 
 

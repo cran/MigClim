@@ -2,11 +2,11 @@
 \alias{MigClim.genClust}
 \title{Run a simulation of migration of genetic clusters.}
 \description{Simulate the migration of genetic clusters. Centers of origin of the genetic clusters are picked randomly or defined by the user as the initial distribution. The simulation makes the genetic clusters migrate until the last time step for which data files are provided. Unlike the 'migrate' function in this package, this genetic clusters migration simulation assumes large time scales (e.g., 1000 years per step).}
-\usage{MigClim.genClust (hsMapFile="hsMap", barrierFile="barrier", nrClusters=4,
+\usage{MigClim.genClust (hsMap="hsMap", barrier="barrier", nrClusters=4,
   nrIterations=1, threshold=445, outFile="out", initFile="")}
 \arguments{
-  \item{hsMapFile}{The 'base' name of the raster files that contain the habitat suitability maps for each time step in ASCII grid format. Iteration numbers (1,2,3,...) and the file extension '.asc' are automatically added to this 'base' name to get the file name for the habitat suitability map for each next iteration. For example, if the habitat suitability raster files are named 'hsMap1.asc', 'hsMap2.asc', etc., the value of this argument should be 'hsMap'. Habitat suitability maps indicate the suitability of each cell to be colonized as a value between 0 (fully unsuitable) and 1000 (fully suitable).}
-  \item{barrierFile}{The 'base' name of the raster files that contain the barriers for each time step in ASCII grid format. Iteration numbers (1,2,3,...) and the file extension '.asc' are automatically added to this 'base' name to get the file name for the barriers for each next iteration. For example, if the barrier raster files are named 'barrier1.asc', 'barrier2.asc', etc., the value of this argument should be 'barrier'. Barrier files indicate whether there is a barrier to migration present (1) or absent (0 or nodata_value) in each cell.}
+  \item{hsMap}{The 'base' name of the raster files that contain the habitat suitability maps for each time step in ASCII grid format. Iteration numbers (1,2,3,...) and the file extension '.asc' are automatically added to this 'base' name to get the file name for the habitat suitability map for each next iteration. For example, if the habitat suitability raster files are named 'hsMap1.asc', 'hsMap2.asc', etc., the value of this argument should be 'hsMap'. Habitat suitability maps indicate the suitability of each cell to be colonized as a value between 0 (fully unsuitable) and 1000 (fully suitable).}
+  \item{barrier}{The 'base' name of the raster files that contain the barriers for each time step in ASCII grid format. Iteration numbers (1,2,3,...) and the file extension '.asc' are automatically added to this 'base' name to get the file name for the barriers for each next iteration. For example, if the barrier raster files are named 'barrier1.asc', 'barrier2.asc', etc., the value of this argument should be 'barrier'. Barrier files indicate whether there is a barrier to migration present (1) or absent (0 or nodata_value) in each cell.}
   \item{nrClusters}{The number of genetic clusters to use.}
   \item{nrIterations}{The number of iterations for which the simulation will be run. This number must match the number of habitat suitability maps and barrier files.}
   \item{threshold}{The threshold value (in [0:1000]) above which a cell is considered suitable.}
@@ -28,7 +28,7 @@ It is assumed that the input files are in the current working directory. If not,
 ### Run the example as follows (set the current working directory to the
 ###   folder where the example data files are located):
 ###
-MigClim.genClust (hsMapFile="hsMap", barrierFile="barrier", nrClusters=4,
+MigClim.genClust (hsMap="hsMap", barrier="barrier", nrClusters=4,
   nrIterations=5, threshold=445, outFile="out", initFile="")
 MigClim.validate (validateFile="Validation.txt", nrPoints=79,
   simFile="out5.asc", nrClusters=4)

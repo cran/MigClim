@@ -66,7 +66,7 @@ bool mcSrcCell (int i, int j, int **curState, int **pxlAge, int loopID,
 	if ((curState[k][l] > 0) &&
 	    (curState[k][l] != loopID))
 	{
-	  if (pxlAge[k][l] >= initMatAge)
+	  if (pxlAge[k][l] >= iniMatAge)
 	  {
 	    /*
 	    ** 2. Compute the distance between sink and (potential) source pixel
@@ -92,7 +92,7 @@ bool mcSrcCell (int i, int j, int **curState, int **pxlAge, int loopID,
 	      else
 	      {
 		probCol = dispKernel[realDist-1] * pxlSizeFactor *
-			    seedProdProb[pxlAge[k][l] - initMatAge] *
+			    propaguleProd[pxlAge[k][l] - iniMatAge] *
 			    (habSuit / 1000.0);
 	      }
 
