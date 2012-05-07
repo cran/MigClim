@@ -1,9 +1,6 @@
 /*
 ** migrate.c: Implementation of the main MigClim function.
-**
-** Wim Hordijk   Last modified: 21 April 2012
-**
-** This C code is based on the original Visual Basic code of Robin Engler.
+** Wim Hordijk & Robin Engler:  Last modified: 11 May 2012 (RE)
 */
 
 #include "migclim.h"
@@ -29,7 +26,7 @@ pixel rndPixel;
 ** Function prototypes.
 */
 void mcRandomPixel   (pixel *pix);
-bool mcSinkCellCheck (pixel pix, int **curState, int **habSuit, int **bars);
+bool mcSinkCellCheck (pixel pix, int **curState, int **habSuit);
 
 
 /*
@@ -131,7 +128,7 @@ void mcMigrate (char **paramFile, int *nrFiles)
 
   /*
   ** Matrices:
-  **   - currentState:   Values in [-32768;32767].
+  **   - currentState:   Values in [-32768;32767]. NoData values are represented by -9999
   **   - habSuitability: Values in [0;1000].
   **   - barriers:       Values in [0;255].
   **   - pixelAge:       Values in [0;255].
@@ -207,11 +204,12 @@ void mcMigrate (char **paramFile, int *nrFiles)
     ** Species initial distribution.
     */
     sprintf (fileName, "%s.asc", iniDist);
-    if (mcReadMatrix (fileName, currentState) == -1)
+    if (readMat (fileName, currentState) == -1)
     {
       *nrFiles = -1;
       goto End_of_Routine;
     }
+    
     /*
     ** Barrier options.
     */
@@ -219,19 +217,30 @@ void mcMigrate (char **paramFile, int *nrFiles)
     {
       for (j = 0; j < nrCols; j++)
       {
-	barriers[i][j] = 0;
+	    barriers[i][j] = 0;
       }
     }
-    if (useBarrier)
+    if(useBarrier)
     {
       sprintf (fileName, "%s.asc", barrier);
-      if (mcReadMatrix (fileName, barriers) == -1)
+      if (readMat (fileName, barriers) == -1)
       {
-	*nrFiles = -1;
-	goto End_of_Routine;
+	    *nrFiles = -1;  /* if readMat() return -1, an error occured  */
+	    goto End_of_Routine;
       }
-      mcFilterByBarrier (currentState, barriers);
-    }
+    } 
+    /* Filter the barrier matrix in two ways:
+    **  -> reclass any value < 0 as 0 (this is to remove NoData values of -9999).
+    **  -> set the cells with NoData in 'currentState' to NoData in 'barriers'
+    **     so that the NoData in 'currentState' and 'barriers' are identical */
+    mcFilterMatrix(barriers, currentState, true, false, true);
+    
+    /* Filter the values of current state matrix by the barriers matrix
+    ** (when barriers = 1 we set currentState = 0) */
+    if(useBarrier) mcFilterMatrix(currentState, barriers, false, true, false);
+    
+    
+    
     /* Time to reach dispersal maturity.
     **
     ** Before a pixel (= a population) can disperse, it needs to reach a certain
@@ -264,14 +273,13 @@ void mcMigrate (char **paramFile, int *nrFiles)
     ** This Matrix will keep track of the species distribution under the
     ** "no dispersal" scenario.
     */
-    for (i = 0; i < nrRows; i++)
-    {
-      for (j = 0; j < nrCols; j++)
-      {
-	noDispersal[i][j] = currentState[i][j];
+    for (i = 0; i < nrRows; i++){
+      for (j = 0; j < nrCols; j++){
+	    noDispersal[i][j] = currentState[i][j];
       }
     }
-            
+        
+        
     /*
     ** Initialize counter variables.
     **
@@ -300,23 +308,20 @@ void mcMigrate (char **paramFile, int *nrFiles)
     */
 
     /*
-    ** Count the number of initially colonized pixels
-    ** (i.e. initial species distribution).
+    ** Count the number of initially colonized pixels (i.e. initial species distribution)
+    ** as well as the number of empty (absence) cells.
     */
     for (i = 0; i < nrRows; i++)
     {
       for (j = 0; j < nrCols; j++)
       {
-	if (currentState[i][j] == 1)
-	{
-	  nrInitial++;
-	}
+	    if(currentState[i][j] == 1) nrInitial++;
+        if(currentState[i][j] == 0) nrAbsent++;
       }
     }
     nrColonized = nrInitial;
     nrNoDispersal = nrInitial;
     nrUnivDispersal = nrInitial;
-    nrAbsent = (nrRows * nrCols) - nrInitial;
 
     /*
     ** Write the initial state to the data file.
@@ -345,42 +350,46 @@ void mcMigrate (char **paramFile, int *nrFiles)
     Rprintf ("Running MigClim simulation %s.\n", simulName2);
     for (envChgStep = 1; envChgStep <= envChgSteps; envChgStep++)
     {
-      /*
-      ** Print the current environmental change iteration.
-      */
+      /* Print the current environmental change iteration. */
       Rprintf ("  %d...\n", envChgStep);
 
-      /*
-      ** Update and reclassify the habitat suitability matrix.
-      ** Reclassify habSuitability according to the user-defined threshold.
-      ** If the user selected to use "habitat invasibility" we do not reclassify
-      ** values >= Threshold. If user selected not to use "habitat invasibility"
-      ** then we rclassify values >= Threshold to 1000.
-      */
+      /* Load the habitat suitability layer for the current envChgStep. */
       sprintf (fileName, "%s%d.asc", hsMap, envChgStep);
-      if (mcReadMatrix (fileName, habSuitability) == -1)
+      if (readMat (fileName, habSuitability) == -1)
       {
-	*nrFiles = -1;
-	goto End_of_Routine;
+	    *nrFiles = -1;
+	    goto End_of_Routine;
       }
+      
+      /* if the user chose a rcThreshold > 0, reclass the habitat suitability into 0 or 1000
+      ** if rcThreshold == 0 then suitability values are left unchanged. */
       if (rcThreshold > 0)
       {
-	for (i = 0; i < nrRows; i++)
-	{
-	  for (j = 0; j < nrCols; j++)
-	  {
-	    if (habSuitability[i][j] < rcThreshold)
+	    for (i = 0; i < nrRows; i++)
 	    {
-	      habSuitability[i][j] = 0;
+	      for (j = 0; j < nrCols; j++)
+	      {
+	        if (habSuitability[i][j] < rcThreshold)
+	        {
+	          habSuitability[i][j] = 0;
+	        }
+	        else
+	        {
+	          habSuitability[i][j] = 1000;
+	        }
+	      }
 	    }
-	    else
-	    {
-	      habSuitability[i][j] = 1000;
-	    }
-	  }
-	}
       }
-    
+      
+      /* Filter the habitat suitability matrix in three ways:
+      **  -> replace any value < 0 by 0 (this removes NoData).
+      **  -> set habitat suitability to 0 where barrier = 1.
+      **  -> set habitat suitability values to NoData where barrier = NoData. 
+      ** and also  */
+      mcFilterMatrix(habSuitability, barriers, true, true, true);
+      
+      
+   
       /*
       ** Set the values that will keep track of pixels colonized during the next
       ** climate change loop.
@@ -397,21 +406,21 @@ void mcMigrate (char **paramFile, int *nrFiles)
       */
       if (envChgStep == 0)
       {
-	loopID = 1;
+        loopID = 1;
       }
       else
       {
-	loopID = envChgStep * 100;
+	    loopID = envChgStep * 100;
       }
       
       /*
       ** "Unlimited" and "no dispersal" scenario pixel count. Here we compute
       ** the number of pixels that would be colonized if dispersal was
       ** unlimited or null. This is simply the sum of all potentially suitable
-      ** habitats (excluding barriers and filters).
+      ** habitats.
       */
-      nrUnivDispersal = mcUnivDispCnt (habSuitability, barriers);
-      updateNoDispMat (habSuitability, noDispersal, &nrNoDispersal);
+      nrUnivDispersal = mcUnivDispCnt(habSuitability);
+      updateNoDispMat(habSuitability, noDispersal, &nrNoDispersal);
 
       /*
       ** Update for temporarily resilient pixels.
@@ -508,8 +517,7 @@ void mcMigrate (char **paramFile, int *nrFiles)
 	    **    is suitable, it's unoccupied and is not on a barrier or filter
 	    **    pixel).
 	    */
-	    if ((habSuitability[i][j] > 0) && (currentState[i][j] <= 0) &&
-		(barriers[i][j] == 0))
+	    if((habSuitability[i][j] > 0) && (currentState[i][j] <= 0))
 	    {
 	      habIsSuitable = true;
 	    }
@@ -616,8 +624,7 @@ void mcMigrate (char **paramFile, int *nrFiles)
 		    /*
 		    ** Now we check if this random cell is a suitable sink cell.
 		    */
-		    if (mcSinkCellCheck (rndPixel, currentState, habSuitability,
-					 barriers))
+		    if (mcSinkCellCheck (rndPixel, currentState, habSuitability))
 		    {
 		      /*
 		      ** The pixel gets colonized.
@@ -687,7 +694,7 @@ void mcMigrate (char **paramFile, int *nrFiles)
 	** Update pixel counters.
 	*/
 	nrColonized = nrColonized + nrStepColonized - nrStepDecolonized;
-	nrAbsent = (nrRows * nrCols) - nrColonized;
+	nrAbsent = nrAbsent - nrStepColonized + nrStepDecolonized;
 	nrTotColonized += nrStepColonized;
 	nrTotDecolonized += nrStepDecolonized;
 	nrTotLDDSuccess += nrStepLDDSuccess;
@@ -714,7 +721,7 @@ void mcMigrate (char **paramFile, int *nrFiles)
 	{
 	  sprintf (fileName, "%s/%s_step_%d.asc", simulName, simulName2,
 		   loopID);
-	  if (mcWriteMatrix (fileName, currentState) == -1)
+	  if (writeMat (fileName, currentState) == -1)
 	  {
 	    *nrFiles = -1;
 	    goto End_of_Routine;
@@ -725,8 +732,8 @@ void mcMigrate (char **paramFile, int *nrFiles)
       /*
       ** Update temporarily resilient pixels.
       ** Temporarily resilient pixels can be distinguished by:
-      **   - CurrentState_Matrix = 29'900 to 29'999. Increases by 1 at each
-      **     year. Age_Matrix has a positive value.
+      **   -> CurrentState_Matrix = 29'900 to 29'999. Increases by 1 at each year.
+      **   -> Age_Matrix has a positive value.
       */
       for (i = 0; i < nrRows; i++)
       {
@@ -747,15 +754,12 @@ void mcMigrate (char **paramFile, int *nrFiles)
     ** could not be colonized due to dispersal limitations.
     ** These pixels are assigned a value of 30'000
     */
-    for (i = 0; i < nrRows; i++)
-    {
-      for (j = 0; j < nrCols; j++)
-      {
-	if ((habSuitability[i][j] > 0) && (currentState[i][j] <= 0) &&
-	    (barriers[i][j] == 0))
-	{
-	  currentState[i][j] = 30000;
-	}
+    for (i = 0; i < nrRows; i++){
+      for (j = 0; j < nrCols; j++){
+	    if ((habSuitability[i][j] > 0) && (currentState[i][j] <= 0))
+	    {
+	      currentState[i][j] = 30000;
+	    }
       }
     }
   
@@ -763,7 +767,7 @@ void mcMigrate (char **paramFile, int *nrFiles)
     ** Write the final state matrix to file.
     */
     sprintf (fileName, "%s/%s_raster.asc", simulName, simulName2);
-    if (mcWriteMatrix (fileName, currentState) == -1)
+    if (writeMat (fileName, currentState) == -1)
     {
       *nrFiles = -1;
       goto End_of_Routine;
@@ -902,67 +906,40 @@ void mcRandomPixel (pixel *pix)
 
 
 /*
-** mcSinkCellCheck: Perform a basic check to see whether a given pixel fulfills
-**                  the conditions to be a "sink" pixel (i.e. a pixel to be
+** mcSinkCellCheck: Perform a basic check to see whether a given cell fulfills
+**                  the conditions to be a "sink" cell (i.e. a cell to be
 **                  potentially colonized).
-**
-** The conditions that are checked are the following:
-**   1° Pixel must be within the limits of the cellular automaton.
-**   2° Pixel must be empty (i.e. non-occupied).
-**   3° Pixel must contain suitable habitat (i.e. it must be potentially
-**      suitable).
-**   4° Pixel does not belong to a barrier or filter.
+**                  The conditions that are checked are the following:
+**                   -> 1. Cell must be within the limits of the cellular automaton.
+**                   -> 2. Cell must be empty (i.e. non-occupied).
+**                   -> 3. Cell must contain suitable habitat.
 **
 ** Parameters:
-**   - pix: The pixel to consider.
-**   - curState: A pointer to the current state matrix.
-**   - habSuit:  A pointer to the habitat suitability matrix.
-**   - bars:     A pointer to the barriers matrix.
+**   -> pix: The cell/pixel to consider.
+**   -> curState: A pointer to the current state matrix.
+**   -> habSuit:  A pointer to the habitat suitability matrix.
 **
 ** Returns:
-**   If the pixel is suitable: true.
-**   Otherwise:                false.
+**   If the cell is suitable: true.
+**   Otherwise:               false.
 */
 
-bool mcSinkCellCheck (pixel pix, int **curState, int **habSuit, int **bars)
+bool mcSinkCellCheck (pixel pix, int **curState, int **habSuit)
 {
   bool suitable;
+  suitable = false;
 
+  /* 1. Verify the cell is within the limits of the cellular automaton. */
+  if((pix.row < 0) || (pix.row >= nrRows) || (pix.col < 0) || (pix.col >= nrCols)) return (suitable);
+
+  /* 2. Verify the cell is empty. */
+  if(curState[pix.row][pix.col] > 0) return (suitable);
+
+  /* 3. Verify the cell contains suitable habitat for the species. */
+  if((UNIF01 * 1000) > habSuit[pix.row][pix.col]) return (suitable);
+ 
+  /* If the function has not exited by now then it means the cell is suitable. */
   suitable = true;
-
-  /*
-  ** 1° Verify the pixel is within the limits of the cellular automaton.
-  */
-  if ((pix.row < 0) || (pix.row >= nrRows) || (pix.col < 0) ||
-      (pix.col >= nrCols))
-  {
-    suitable = false;
-  }
-  /*
-  ** 2° Verify the pixel is empty.
-  */
-  else if (curState[pix.row][pix.col] > 0)
-  {
-    suitable = false;
-  }
-  /*
-  ** 3° Verify the pixel contains suitable habitat for the species.
-  */
-  else if ((UNIF01 * 1000) > habSuit[pix.row][pix.col])
-  {
-    suitable = false;
-  }
-  /*
-  ** 4° Verify the pixel is not a "barrier" pixel.
-  */
-  else if (bars[pix.row][pix.col] > 0)
-  {
-    suitable = false;
-  }
-    
-  /*
-  ** Return the result.
-  */
   return (suitable);
 }
 

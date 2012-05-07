@@ -47,7 +47,7 @@ MigClim.plot <- function(asciiFile, outDir="", fileFormat="jpeg", fullOutput=FAL
 		oneExists <- any(rstVals==1)
 		unilimtedExists <- any(rstVals==30000)
 		Colors <- rep("yellow", negativeNb)
-		if(zeroExists) Colors <- c(Colors, "white")
+		if(zeroExists) Colors <- c(Colors, "grey94")
 		if(oneExists) Colors <- c(Colors, "black")
 		Colors <- c(Colors, rainbow(positiveNb, start=0, end=0.4))
 		if(unilimtedExists) Colors <- c(Colors, "pink")

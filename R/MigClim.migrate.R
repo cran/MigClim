@@ -1,7 +1,7 @@
 #
 # The R functions for the MigClim package.
 # Robin Engler & Wim Hordijk
-# MigClim.migrate: Last modified: 26 April 2012
+# MigClim.migrate: Last modified: 11 May 2012
 #
 # MigClim.migrate: Initialize the MigClim method by writing the parameter
 #                  values to file, and then run it.
@@ -230,8 +230,7 @@ MigClim.migrate <- function (iniDist="InitialDist", hsMap="HSmap", rcThreshold=0
   
   # If the input format is ascii grid, then we check that the files are located 
   # in the working directory. If not, we copy the files to the working directory.
-  if (RExt==".asc")
-  {
+  if (RExt==".asc"){
     if(iniDist!=basename(iniDist)){
 		file.copy(from=iniDist, to=basename(iniDist), overwrite=T)
 		iniDist <- basename(iniDist)
@@ -254,24 +253,49 @@ MigClim.migrate <- function (iniDist="InitialDist", hsMap="HSmap", rcThreshold=0
   }
   
   
-  # Verify that all raster have exactly the same dimensions and that they
-  # contain apropriate values. "iniDist" and "barrier" should
-  # contain only values of 0 or 1. "hsMap" should contain only values
-  # in the range [0:1000]
+  # Verify that all ascii grid files have a correct structure and that their NoData value (if any) is set to -9999
+  #
+  noDataVal <- getNoDataValue(paste(iniDist,".asc",sep=""))
+  if(!is.na(noDataVal)){
+    if(noDataVal=="ErrorInFile") stop("Data input error: the 'iniDist' ascii grid file does not have the correct structure.\n")
+    if(noDataVal!=-9999) stop("Data input error: the 'iniDist' ascii grid file must have 'NoData' values set to -9999.\n")
+  }
+  for(J in 1:envChgSteps){
+	noDataVal <- getNoDataValue(paste(hsMap,J,".asc",sep=""))
+    if(!is.na(noDataVal)){
+      if(noDataVal=="ErrorInFile") stop("Data input error: one or more 'hsMap' ascii grid files do not have the correct structure.\n")
+      if(noDataVal!=-9999) stop("Data input error: all 'hsMap' ascii grid files must have 'NoData' values set to -9999.\n")
+    }    
+  }
+  if(barrier!=""){
+    noDataVal <- getNoDataValue(paste(barrier,".asc",sep=""))
+    if(!is.na(noDataVal)){
+      if(noDataVal=="ErrorInFile") stop("Data input error: the 'Barrier' ascii grid file does not have the correct structure.\n")
+      if(noDataVal!=-9999) stop("Data input error: the 'Barrier' ascii grid file must have 'NoData' values set to -9999.\n")
+    }
+  }
+  rm(noDataVal)
+  
+  
+  # Verify that all raster have exactly the same dimensions and that they contain apropriate values. 
+  # "iniDist" and "barrier" should contain only values of 0 or 1. "hsMap" should contain only values in the range [0:1000].
   #
   Rst <- raster(paste(iniDist,".asc",sep=""))
   nrRows <- nrow(Rst)
   nrCols <- ncol(Rst)
   if(any(is.na(match(raster::unique(Rst), c(0,1))))) stop("Data input error: the 'iniDist' raster should contain only values of 0 or 1 \n")
+  #if(dataType(Rst)!="INT2U" & dataType(Rst)!="INT1U") stop("Data input error: the 'iniDist' layer must contain integer values (8 or 16-bit unsigned integers). The R 'dataType' code for 8-bit and 16-bit unsigned integers is 'INT1U' and 'INT2U'.")
   for(J in 1:envChgSteps){
     Rst <- raster(paste(hsMap,J,".asc",sep=""))
-    if (nrow(Rst)!=nrRows | ncol(Rst)!=nrCols) stop("Data input error: not all your rasters input data have the same dimensions. \n")
-    if (cellStats(Rst,"min")<0 | cellStats(Rst,"max")>1000) stop("Data input error: not all habitat suitability rasters must have values in the range [0:1000]. \n")
+    #if(dataType(Rst)!="INT2U") stop("Data input error: all habitat suitability rasters must contain integer values (16-bit unsigned integers) in the range 0 to 1000. The R 'dataType' code for 16-bit unsigned integers is 'INT2U'.")
+    if(nrow(Rst)!=nrRows | ncol(Rst)!=nrCols) stop("Data input error: not all your rasters input data have the same dimensions. \n")
+    if(cellStats(Rst,"min")<0 | cellStats(Rst,"max")>1000) stop("Data input error: all habitat suitability rasters must have values in the range [0:1000]. \n")
     rm(Rst)
   }
   if(barrier!=""){
     Rst <- raster(paste(barrier,".asc",sep=""))
-    if (nrow(Rst)!=nrRows | ncol(Rst)!=nrCols) stop("Data input error: not all your rasters input data have the same dimensions. \n")
+    #if(dataType(Rst)!="INT2U" & dataType(Rst)!="INT1U") stop("Data input error: the 'barrier' layer must contain integer values (8 or 16-bit unsigned integers). The R 'dataType' code for 8-bit and 16-bit unsigned integers is 'INT1U' and 'INT2U'.")
+    if(nrow(Rst)!=nrRows | ncol(Rst)!=nrCols) stop("Data input error: not all your rasters input data have the same dimensions. \n")
     if(any(is.na(match(raster::unique(Rst), c(0,1))))) stop("Data input error: the 'barrier' raster should contain only values of 0 or 1 \n")
     rm(Rst)
   }
@@ -298,7 +322,7 @@ MigClim.migrate <- function (iniDist="InitialDist", hsMap="HSmap", rcThreshold=0
     write(paste("barrierType", barrierType), file=fileName, append=T)
   }
   write(paste("iniMatAge", iniMatAge), file=fileName, append=T)
-  write(paste("fullMatAge", length(propaguleProd)+1), file=fileName, append=T)
+  write(paste("fullMatAge", iniMatAge + length(propaguleProd)), file=fileName, append=T)
   write(c("propaguleProd", propaguleProd), file=fileName, append=T, ncolumns=length(propaguleProd)+1)
   if(lddFreq > 0.0){
     write(paste("lddFreq", lddFreq), file=fileName, append=T)
@@ -366,6 +390,39 @@ MigClim.migrate <- function (iniDist="InitialDist", hsMap="HSmap", rcThreshold=0
     cat("Test for", simulName, "completed sucessfully.\n")  
     return(envChgSteps)
   } 
+}
+
+
+
+
+###
+### This function checks the structure of an ESRI ascii grid file and, if the structure is correct,
+### returns its NoData value.
+### If the structure of the file is not correct, the function returns a string: "ErrorInFile"
+### If no NoData value is indicated (which is possible, since this information is optional),
+### the function returns NA.
+### 
+getNoDataValue <- function(fileName){
+	
+	# verify that the ascii file has the correct structure:	
+	noDataVal <- "ErrorInFile"
+	fileStruct <- c("ncols","nrows","xllcorner","yllcorner","cellsize")
+	fileStruct2 <- c(5,5,9,9,8)
+	for(J in 0:4){
+		lineVal <- scan(file=fileName, what="character", nlines=1, skip=J, quiet=TRUE)
+		if(length(lineVal)!=2) return(noDataVal)
+		if(nchar(lineVal[1])!=fileStruct2[J+1]) return(noDataVal)
+		if(length(grep(fileStruct[J+1], lineVal[1], ignore.case=T))!=1) return(noDataVal)
+	}
+	
+	# get NoData value
+	# (note that this line is optional in the file. If the line is missing we return NA.
+	lineVal <- scan(file=fileName, what="character", nlines=1, skip=5, quiet=TRUE)
+	if(length(lineVal)<2) return(noDataVal)
+	noDataVal <- NA
+	if(length(grep("NODATA_value", lineVal[1], ignore.case=T))==1 & nchar(lineVal[1])==12) noDataVal <- lineVal[2]
+
+	return(noDataVal)
 }
 
 

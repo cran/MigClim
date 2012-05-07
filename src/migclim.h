@@ -1,7 +1,6 @@
 /*
 ** migclim.h: Header file for the MigClim methods.
-**
-** Wim Hordijk   Last modified: 25 January 2012
+** Wim Hordijk   Last modified: 11 May 2012 (RE)
 */
 
 #ifndef _MIGCLIM_H_
@@ -42,8 +41,7 @@ extern int     nrRows, nrCols, envChgSteps, dispSteps, dispDist, iniMatAge,
                noData, replicateNb;
 extern double *dispKernel, *propaguleProd, lddFreq, xllCorner, yllCorner,
                cellSize;
-extern char    iniDist[128], hsMap[128], simulName[128],
-               barrier[128];
+extern char    iniDist[128], hsMap[128], simulName[128], barrier[128];
 extern bool    useBarrier, fullOutput;
 
 
@@ -53,21 +51,17 @@ extern bool    useBarrier, fullOutput;
 void mcMigrate           (char **paramFile, int *nrFiles);
 bool mcSrcCell           (int i, int j, int **curState, int **pxlAge,
 			  int loopID, int habSuit, int **barriers);
-int  mcUnivDispCnt       (int **habSuit, int **barriers);
+int  mcUnivDispCnt       (int **habSuit);
 void updateNoDispMat     (int **hsMat, int **noDispMat, int *noDispCount);
-void mcFilterByBarrier   (int **curState, int **barriers);
-bool mcIntersectsBarrier (int snkX, int snkY, int srcX, int srcY,
-			  int **barriers);
+void mcFilterMatrix      (int **inMatrix, int **filterMatrix, bool filterNoData, bool filterOnes, bool insertNoData);
+bool mcIntersectsBarrier (int snkX, int snkY, int srcX, int srcY, int **barriers);
 int  mcInit              (char *paramFile);
-int  mcReadMatrix        (char *fname, int **mat);
-int  mcWriteMatrix       (char *fname, int **mat);
-void genClust            (int *nrow, int *ncol, int *ncls, int *niter,
-			  int *thrs, char **suitBaseName, char **barrBaseName,
-			  char **outBaseName, char **initFile);
-void validate            (char **obsFileName, int *npts, char **simFileName,
-			  int *ncls, double *bestScore);
 int  readMat             (char *fName, int **mat);
 int  writeMat            (char *fName, int **mat);
+void genClust            (int *nrow, int *ncol, int *ncls, int *niter, int *thrs, char **suitBaseName,
+                          char **barrBaseName, char **outBaseName, char **initFile);
+void validate            (char **obsFileName, int *npts, char **simFileName, int *ncls, double *bestScore);
+
 
 
 #endif  /* _MIGCLIM_H_ */

@@ -1,7 +1,7 @@
 /*
 ** file_io.c: Functions for file input/output.
 **
-** Wim Hordijk   Last modified: 19 April 2012 by Robin
+** Wim Hordijk   Last modified: 11 May 2012 (RE)
 */
 
 #include "migclim.h"
@@ -452,206 +452,7 @@ int mcInit (char *paramFile)
 
 
 /*
-** mcReadMatrix: Read a data matrix from file.
-**
-** Parameters:
-**   - fname:  The name of the file to read from.
-**   - mat:    The matrix to put the data in (assumed to be large enough).
-**
-** Returns:
-**   - If everything went fine:  0.
-**   - Otherwise:               -1.
-*/
-
-int mcReadMatrix (char *fname, int **mat)
-{
-  int   i, j, val, status, noData;
-  char  line[1024], param[128], dblVal[128];
-  FILE *fp;
-
-  status = 0;
-  fp = NULL;
-  
-  /*
-  ** Open the file for reading.
-  */
-  if ((fp = fopen(fname, "r")) == NULL)
-  {
-    status = -1;
-    Rprintf ("Can't open data file %s\n", fname);
-    goto End_of_Routine;
-  }
-
-  /*
-  ** Get the 'meta data'.
-  */
-  if ((fgets (line, 1024, fp) == NULL) ||
-      (sscanf (line, "%s %d\n", param, &val) != 2) ||
-      (strcasecmp (param, "ncols") != 0))
-  {
-    status = -1;
-    Rprintf ("'ncols' expected in data file %s.\n", fname);
-    goto End_of_Routine;
-  }
-  if (val != nrCols)
-  {
-    status = -1;
-    Rprintf ("Invalid number of columns in data file %s\n", fname);
-    goto End_of_Routine;
-  }
-  if ((fgets (line, 1024, fp) == NULL) ||
-      (sscanf (line, "%s %d\n", param, &val) != 2) ||
-      (strcasecmp (param, "nrows") != 0))
-  {
-    status = -1;
-    Rprintf ("'nrows' expected in data file %s\n", fname);
-    goto End_of_Routine;
-  }
-  if (val != nrRows)
-  {
-    status = -1;
-    Rprintf ("Invalid number of rows in data file %s.\n", fname);
-    goto End_of_Routine;
-  }
-  if ((fgets (line, 1024, fp) == NULL) ||
-      (sscanf (line, "%s %s\n", param, dblVal) != 2) ||
-      (strcasecmp (param, "xllcorner") != 0))
-  {
-    status = -1;
-    Rprintf ("'xllcorner' expected in data file %s\n", fname);
-    goto End_of_Routine;
-  }
-  xllCorner = strtod (dblVal, NULL);
-  if ((fgets (line, 1024, fp) == NULL) ||
-      (sscanf (line, "%s %s\n", param, dblVal) != 2) ||
-      (strcasecmp (param, "yllcorner") != 0))
-  {
-    status = -1;
-    Rprintf ("'yllcorner' expected in data file %s\n", fname);
-    goto End_of_Routine;
-  }
-  yllCorner = strtod (dblVal, NULL);
-  if ((fgets (line, 1024, fp) == NULL) ||
-      (sscanf (line, "%s %s\n", param, dblVal) != 2) ||
-      (strcasecmp (param, "cellsize") != 0))
-  {
-    status = -1;
-    Rprintf ("'cellsize' expected in data file %s\n", fname);
-    goto End_of_Routine;
-  }
-  cellSize = strtod (dblVal, NULL);
-  if ((fgets (line, 1024, fp) == NULL) ||
-      (sscanf (line, "%s %d\n", param, &noData) != 2) ||
-      (strcasecmp (param, "nodata_value") != 0))
-  {
-    status = -1;
-    Rprintf ("'nodata_value' expected in data file %s\n", fname);
-    goto End_of_Routine;
-  }
-  
-  /*
-  ** Read the values into the matrix.
-  */
-  for (i = 0; i < nrRows; i++)
-  {
-    for (j = 0; j < nrCols; j++)
-    {
-      if (fscanf(fp, "%d", &val) != 1)
-      {
-	status = -1;
-	Rprintf ("Invalid value in data file %s\n", fname);
-	goto End_of_Routine;
-      }
-      if (val != noData)
-      {
-	mat[i][j] = val;
-      }
-      else
-      {
-	mat[i][j] = 0;
-      }
-    }
-    val = fscanf (fp, "\n");
-  }
-
-  /*
-  ** Close the file and return the status.
-  */
- End_of_Routine:
-  if (fp != NULL)
-  {
-    fclose (fp);
-  }
-  return (status);
-}
-
-
-/*
-** mcWriteMatrix: Write a data matrix to file.
-**
-** Parameters:
-**   - fname:  The name of the file to write to.
-**   - mat:    The data matrix to write.
-**
-** Returns:
-**   - If everything went fine:  0.
-**   - Otherwise:               -1.
-*/
-
-int mcWriteMatrix (char *fname, int **mat)
-{
-  int   i, j, status;
-  FILE *fp;
-
-  status = 0;
-  fp = NULL;
-  
-  /*
-  ** Open the file for writing.
-  */
-  if ((fp = fopen(fname, "w")) == NULL)
-  {
-    status = -1;
-    Rprintf ("Can't open data file %s for writing.\n", fname);
-    goto End_of_Routine;
-  }
-
-  /*
-  ** Write the 'meta data'.
-  */
-  fprintf (fp, "ncols %d\n", nrCols);
-  fprintf (fp, "nrows %d\n", nrRows);
-  fprintf (fp, "xllcorner %.9f\n", xllCorner);     /* WIM: I have added the variables here but somehow it seems */
-  fprintf (fp, "yllcorner %.9f\n", yllCorner);     /*      they do not get initialized as I keep getting a value of 0 */
-  fprintf (fp, "cellsize %.9f\n", cellSize);       /*      for all of them.   */
-  fprintf (fp, "nodata_value -9999\n");
-  
-  /*
-  ** Write the data to file.
-  */
-  for (i = 0; i < nrRows; i++)
-  {
-    for (j = 0; j < nrCols; j++)
-    {
-      fprintf(fp, "%d ", mat[i][j]);
-    }
-    fprintf (fp, "\n");
-  }
-
-  /*
-  ** Close the file and return the status.
-  */
- End_of_Routine:
-  if (fp != NULL)
-  {
-    fclose (fp);
-  }
-  return (status);
-}
-
-
-/*
-** readMat: Read a data matrix from file.
+** readMat: Read a data matrix from an ESRI ascii grid file.
 **
 ** Note: This should eventually be merged with the above "mcReadMatrix"
 **       function, but we'll keep it separate for now just to make sure
@@ -748,7 +549,7 @@ int readMat (char *fName, int **mat)
       (strcasecmp (param, "nodata_value") != 0))
   {
     status = -1;
-    Rprintf ("'nodata_value' expected in data file %s\n", fName);
+    Rprintf ("'NODATA_value' expected in data file %s\n", fName);
     goto End_of_Routine;
   }
   
@@ -761,9 +562,9 @@ int readMat (char *fName, int **mat)
     {
       if (fscanf(fp, "%d", &intVal) != 1)
       {
-	status = -1;
-	Rprintf ("Invalid value in data file %s\n", fName);
-	goto End_of_Routine;
+	    status = -1;
+        Rprintf ("Invalid value in data file %s\n", fName);
+        goto End_of_Routine;
       }
       mat[i][j] = intVal;
     }
@@ -824,7 +625,7 @@ int writeMat (char *fName, int **mat)
   fprintf (fp, "xllcorner %.9f\n", xllCorner);
   fprintf (fp, "yllcorner %.9f\n", yllCorner);
   fprintf (fp, "cellsize %.9f\n", cellSize);
-  fprintf (fp, "nodata_value %d\n", noData);
+  fprintf (fp, "NODATA_value %d\n", noData);
   
   /*
   ** Write the data to file.

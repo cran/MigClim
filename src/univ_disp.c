@@ -1,9 +1,6 @@
 /*
 ** univ_disp.c: Function for performing the universal dispersal count.
-**
-** Wim Hordijk    Last modified: 03 October 2011
-**
-** This C code is based on the original Visual Basic code of Robin Engler.
+** Wim Hordijk & Robin Engler:   Last modified: 11 May 2012
 */
 
 #include "migclim.h"
@@ -12,43 +9,31 @@
 /*
 ** mcUnivDispCnt: This function return the number of pixels in the habitat
 **                suitability matrix that are suitable (and that would thus
-**                become colonized in the case of unlimited dispersal).
-**                Note that the habitat suitability matrix gets filtered by
-**                the barrier matrix.    
-**
+**                become colonized in the case of unlimited dispersal).   
 ** Parameters:
-**   - habSuit:          A pointer to the matrix that contains the current
-**                       habitat suitability.
-**   - barriers:         A pointer to the barriers matrix.
-**
+**   - habSuit: A pointer to the matrix that contains the current
+**              habitat suitability.
 ** Returns:
 **   The number of suitable and non-barrier pixels.
 */
 
-int mcUnivDispCnt (int **habSuit, int **barriers)
+int mcUnivDispCnt (int **habSuit)
 {
   int i, j, count;
 
-  /*
-  ** Count the number of suitable and non-barrier pixels.
-  */
+  /* Count the number of suitable and non-barrier pixels. */
   count = 0;
-  for (i = 0; i < nrRows; i++)
-  {
-    for (j = 0; j < nrCols; j++)
-    {
-      if ((habSuit[i][j] > 0) && (barriers[i][j] == 0))
-      {
-	count++;
-      }
+  for (i = 0; i < nrRows; i++){
+    for (j = 0; j < nrCols; j++){
+      if (habSuit[i][j] > 0) count++;
     }
   }
 	
-  /*
-  ** Return the result.
-  */
+  /* Return the result. */
   return (count);
 }
+
+
 
 
 /*
@@ -67,21 +52,18 @@ void updateNoDispMat (int **hsMat, int **noDispMat, int *noDispCount)
 {                   
   int i, j;
 
-  if (*noDispCount > 0)
-  {
-    for (i = 0; i < nrRows; i++)
-    {
-      for (j = 0; j < nrCols; j++)
-      {
-	if ((noDispMat[i][j] == 1) && (hsMat[i][j] == 0))
-	{
-	  noDispMat[i][j] = 0;
-	  (*noDispCount)--;
-	}
+  if (*noDispCount > 0){
+    for(i = 0; i < nrRows; i++){
+      for(j = 0; j < nrCols; j++){
+	    if((noDispMat[i][j] == 1) && (hsMat[i][j] == 0)){
+	      noDispMat[i][j] = 0;
+	      (*noDispCount)--;
+	    }
       }
     }
   }
 }
+
 
  
 /*
