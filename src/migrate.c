@@ -195,7 +195,7 @@ void mcMigrate (char **paramFile, int *nrFiles)
     }
     else if (replicateNb > 1)
     {
-      sprintf (simulName2, "%s%d", simulName, RepLoop);
+      sprintf (simulName2, "%s%d", simulName, RepLoop);           /* sprinf(): puts a string into variable simulName2 */
     }
 
     /*
@@ -203,7 +203,7 @@ void mcMigrate (char **paramFile, int *nrFiles)
     **
     ** Species initial distribution.
     */
-    sprintf (fileName, "%s.asc", iniDist);
+    sprintf (fileName, "%s.asc", iniDist);                        /* sprinf(): puts a string into variable fileName */
     if (readMat (fileName, currentState) == -1)
     {
       *nrFiles = -1;
@@ -612,7 +612,7 @@ void mcMigrate (char **paramFile, int *nrFiles)
 		  ** Now we can try to generate a LDD event with the calculated
 		  ** probability.
 		  */
-		  if (UNIF01 < lddSeedProb)
+		  if (UNIF01 < lddSeedProb || lddSeedProb == 1.0)
 		  {
 		    /*
 		    ** Randomly select a pixel within the distance
@@ -868,14 +868,13 @@ void mcMigrate (char **paramFile, int *nrFiles)
     free (propaguleProd);
   }
   
-  /*
-  ** Check the final result.
-  */
-  if (*nrFiles == -1)
-  {
-    Rprintf ("MigClim simulation aborted...\n");
-  }
+  /* If an error occured, display failure message to the user... */
+  if(*nrFiles == -1) Rprintf ("MigClim simulation aborted...\n");
+  
 }
+
+
+
 
 
 /*
@@ -905,6 +904,8 @@ void mcRandomPixel (pixel *pix)
 }
 
 
+
+
 /*
 ** mcSinkCellCheck: Perform a basic check to see whether a given cell fulfills
 **                  the conditions to be a "sink" cell (i.e. a cell to be
@@ -927,6 +928,7 @@ void mcRandomPixel (pixel *pix)
 bool mcSinkCellCheck (pixel pix, int **curState, int **habSuit)
 {
   bool suitable;
+  double rnd;
   suitable = false;
 
   /* 1. Verify the cell is within the limits of the cellular automaton. */
@@ -936,8 +938,10 @@ bool mcSinkCellCheck (pixel pix, int **curState, int **habSuit)
   if(curState[pix.row][pix.col] > 0) return (suitable);
 
   /* 3. Verify the cell contains suitable habitat for the species. */
-  if((UNIF01 * 1000) > habSuit[pix.row][pix.col]) return (suitable);
- 
+  if(habSuit[pix.row][pix.col] == 0) return(suitable);            /* check for case when habitat suitability = 0                       */
+  rnd = UNIF01 * 1000;                                            /* generate random number: UNIF01 is declared in the header section  */
+  if(rnd > (double)habSuit[pix.row][pix.col]) return(suitable);   /* The "(double)" is typecasting the value to a double               */
+  
   /* If the function has not exited by now then it means the cell is suitable. */
   suitable = true;
   return (suitable);

@@ -97,7 +97,7 @@ bool mcSrcCell (int i, int j, int **curState, int **pxlAge, int loopID,
 	      }
 
 	      rnd = UNIF01;
-	      if (rnd < probCol)
+	      if (rnd < probCol || probCol == 1.0)
 	      {
 		/*
 		** When we reach this stage, the last thing we need to check for
