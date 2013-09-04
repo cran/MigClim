@@ -1,8 +1,8 @@
-32d6300bd67b751e340a4f34c4a8b029 *DESCRIPTION
+1a42660d4c4eb2e26bc4cee2c4b96b65 *DESCRIPTION
 684d59765eb908ebebbffcae8af4763f *NAMESPACE
 712e35d19bec27cc4f99b97ae1340b56 *R/MigClim.genClust.R
-fd6206cdf919ab4d16078ffc66b0aa26 *R/MigClim.migrate.R
-1b61e2ca6d6ebeb058c6bf1325691c05 *R/MigClim.plot.R
+44d60427c54f1d27cd8b3ef99e3b5745 *R/MigClim.migrate.R
+f596b2f346b8e1bef47c564d54aa4225 *R/MigClim.plot.R
 8edbac5810b5c6cc74bb8bb22a6be751 *R/MigClim.userGuide.R
 4396f5518f6ce8e3681d869db8579b93 *R/MigClim.validate.R
 e6c83d7e2b71b3c99d29666ff5b4eea2 *data/MigClim.testData.rda

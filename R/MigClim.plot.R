@@ -14,7 +14,7 @@ MigClim.plot <- function(asciiFile, outDir="", fileFormat="jpeg", fullOutput=FAL
 	if(outDir!="") if(!file.exists(outDir)) stop("Input error: 'outDir' directory could not be found.\n")
 	
 	### load raster library
-	if(require(raster, quietly=T)==F) stop("This function requires the 'raster' package. Please install 'raster' on your computer and try again.")
+	#if(require(raster, quietly=T)==F) stop("This function requires the 'raster' package. Please install 'raster' on your computer and try again.")
 	
 	### get root name and output directory
 	baseName <- substr(basename(asciiFile), 1, nchar(basename(asciiFile))-11)  # The "baseName" of the MigClim simulation.

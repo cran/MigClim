@@ -16,8 +16,8 @@ MigClim.migrate <- function (iniDist="InitialDist", hsMap="HSmap", rcThreshold=0
 {
   
   # Verify that the user has installed the "raster" and "SDMTools" library on his machine.
-  if(require(raster, quietly=T)==F) stop("This function requires the 'raster' package. Please install 'raster' on your computer and try again.")
-  if(require(SDMTools, quietly=T)==F) stop("This function requires the 'SDMTools' package. Please install 'SDMTools' on your computer and try again.")
+  #if(require(raster, quietly=T)==F) stop("This function requires the 'raster' package. Please install 'raster' on your computer and try again.")
+  #if(require(SDMTools, quietly=T)==F) stop("This function requires the 'SDMTools' package. Please install 'SDMTools' on your computer and try again.")
 
   # Verify that parameters have meaningful values.
   if(!is.numeric(rcThreshold)) stop("'rcThreshold' must be an integer number in the range [0:1000]. \n")
@@ -129,18 +129,18 @@ MigClim.migrate <- function (iniDist="InitialDist", hsMap="HSmap", rcThreshold=0
 	  ### Check if any ".asc" files already exist.
 	  if(RExt!=".asc"){
 		  if(file.exists(paste(basename(iniDist),".asc",sep=""))) stop("The output file '", getwd(), "/", paste(basename(iniDist),".asc",sep=""), "' already exists. \n Delete this file or set 'overWrite=TRUE' in the function's parameters.\n")
-		  for(J in 1:envChgSteps) if(file.exists(paste(basename(hsMap), J,".asc",sep=""))) stop("The output directory '", getwd(), "/", paste(basename(hsMap), J,".asc",sep=""), "' already exists. \n Delete this directory or set 'overWrite=TRUE' in the function's parameters.\n")
-		  if (barrier!="") if(file.exists(paste(basename(barrier),".asc",sep=""))) stop("The output directory '", getwd(), "/", paste(basename(barrier),".asc",sep=""), "' already exists. \n Delete this directory or set 'overWrite=TRUE' in the function's parameters.\n")
+		  for(J in 1:envChgSteps) if(file.exists(paste(basename(hsMap), J,".asc",sep=""))) stop("The output file '", getwd(), "/", paste(basename(hsMap), J,".asc",sep=""), "' already exists. \n Delete this file or set 'overWrite=TRUE' in the function's parameters.\n")
+		  if (barrier!="") if(file.exists(paste(basename(barrier),".asc",sep=""))) stop("The output file '", getwd(), "/", paste(basename(barrier),".asc",sep=""), "' already exists. \n Delete this file or set 'overWrite=TRUE' in the function's parameters.\n")
 	  }
 	  if(RExt==".asc"){
-		  if(iniDist!=basename(iniDist)) if(file.exists(paste(basename(iniDist),".asc",sep=""))) stop("The output directory '", getwd(), "/", paste(basename(iniDist),".asc",sep=""), "' already exists. \n Delete this directory or set 'overWrite=TRUE' in the function's parameters.\n")
-		  if(hsMap!=basename(hsMap)) for(J in 1:envChgSteps) if(file.exists(paste(basename(hsMap), J,".asc",sep=""))) stop("The output directory '", getwd(), "/", paste(basename(hsMap), J,".asc",sep=""), "' already exists. \n Delete this directory or set 'overWrite=TRUE' in the function's parameters.\n")
-		  if(barrier!="") if(barrier!=basename(barrier)) if(file.exists(paste(basename(barrier),".asc",sep=""))) stop("The output directory '", getwd(), "/", paste(basename(barrier),".asc",sep=""), "' already exists. \n Delete this directory or set 'overWrite=TRUE' in the function's parameters.\n")
+		  if(iniDist!=basename(iniDist)) if(file.exists(paste(basename(iniDist),".asc",sep=""))) stop("The output file '", getwd(), "/", paste(basename(iniDist),".asc",sep=""), "' already exists. \n Delete this file or set 'overWrite=TRUE' in the function's parameters.\n")
+		  if(hsMap!=basename(hsMap)) for(J in 1:envChgSteps) if(file.exists(paste(basename(hsMap), J,".asc",sep=""))) stop("The output file '", getwd(), "/", paste(basename(hsMap), J,".asc",sep=""), "' already exists. \n Delete this file or set 'overWrite=TRUE' in the function's parameters.\n")
+		  if(barrier!="") if(barrier!=basename(barrier)) if(file.exists(paste(basename(barrier),".asc",sep=""))) stop("The output file '", getwd(), "/", paste(basename(barrier),".asc",sep=""), "' already exists. \n Delete this file or set 'overWrite=TRUE' in the function's parameters.\n")
 	  }
 	  if(RExt==".DataFrame"){
-		  if(file.exists(paste(simulName, ".InitialDist.asc", sep=""))) stop("The output directory '", getwd(), "/", paste(simulName, ".InitialDist.asc", sep=""), "' already exists. \n Delete this directory or set 'overWrite=TRUE' in the function's parameters.\n")
-		  for(J in 1:envChgSteps) if(file.exists(paste(simulName, ".HSmap", J, ".asc", sep=""))) stop("The output directory '", getwd(), "/", paste(simulName, ".HSmap", J, ".asc", sep=""), "' already exists. \n Delete this directory or set 'overWrite=TRUE' in the function's parameters.\n")
-		  if (barrier!="") if(file.exists(paste(simulName, ".Barrier.asc", sep=""))) stop("The output directory '", getwd(), "/", paste(simulName, ".Barrier.asc", sep=""), "' already exists. \n Delete this directory or set 'overWrite=TRUE' in the function's parameters.\n")  
+		  if(file.exists(paste(simulName, ".InitialDist.asc", sep=""))) stop("The output file '", getwd(), "/", paste(simulName, ".InitialDist.asc", sep=""), "' already exists. \n Delete this file or set 'overWrite=TRUE' in the function's parameters.\n")
+		  for(J in 1:envChgSteps) if(file.exists(paste(simulName, ".HSmap", J, ".asc", sep=""))) stop("The output file '", getwd(), "/", paste(simulName, ".HSmap", J, ".asc", sep=""), "' already exists. \n Delete this file or set 'overWrite=TRUE' in the function's parameters.\n")
+		  if (barrier!="") if(file.exists(paste(simulName, ".Barrier.asc", sep=""))) stop("The output file '", getwd(), "/", paste(simulName, ".Barrier.asc", sep=""), "' already exists. \n Delete this file or set 'overWrite=TRUE' in the function's parameters.\n")  
 	  }
   }
   
@@ -196,11 +196,14 @@ MigClim.migrate <- function (iniDist="InitialDist", hsMap="HSmap", rcThreshold=0
   
   
   # Verify that all the input raster files do exist.
-  if (!file.exists(paste(iniDist,RExt,sep=""))) stop("'iniDist' could not be found.")
-  for (J in 1:envChgSteps){
-    if (!file.exists(paste(hsMap,J,RExt,sep=""))) stop("One or more of the 'hsMap' inputs could not be found.")
+  if(!file.exists(paste(iniDist,RExt,sep=""))) stop(paste("The 'iniDist' file '", iniDist, RExt, "' could not be found.\n", sep=""))
+  for(J in 1:envChgSteps){
+    if(!file.exists(paste(hsMap,J,RExt,sep=""))) stop(paste("The 'hsMap' file '", hsMap, J, RExt, "' could not be found.\n",
+                                                            "The naming convention for hsMap files is 'hsMap basename + 1', 'hsMap basename + 2', etc...\n",
+                                                            "e.g. if you set 'hsMap='habitatSuitMap'' then your first hsMap file must be named 'habitatSuitMap1'.\n",
+                                                            "the following hsMap file must be named 'habitatSuitMap2', 'habitatSuitMap3' and so on.\n", sep=""))
   }
-  if (barrier!="") if (!file.exists(paste(barrier,RExt,sep=""))) stop("'barrier' could not be found.")
+  if(barrier!="") if(!file.exists(paste(barrier,RExt,sep=""))) stop(paste("The 'barrier' file '", barrier, RExt, "' could not be found.\n", sep=""))
 
   
   # If the input format is not ascii grid, then we convert the files to ascii grid format.
@@ -232,22 +235,22 @@ MigClim.migrate <- function (iniDist="InitialDist", hsMap="HSmap", rcThreshold=0
   # in the working directory. If not, we copy the files to the working directory.
   if (RExt==".asc"){
     if(iniDist!=basename(iniDist)){
-		file.copy(from=iniDist, to=basename(iniDist), overwrite=T)
+		file.copy(from=paste(iniDist,".asc",sep=""), to=paste(basename(iniDist),".asc",sep=""), overwrite=T)
 		iniDist <- basename(iniDist)
-		if(exists(CreatedASCII)) CreatedASCII <- c(paste(iniDist,".asc",sep=""), CreatedASCII) else CreatedASCII <- paste(iniDist,".asc",sep="")
+		if(exists("CreatedASCII")) CreatedASCII <- c(paste(iniDist,".asc",sep=""), CreatedASCII) else CreatedASCII <- paste(iniDist,".asc",sep="")
     }
     if(hsMap!=basename(hsMap)){
 		for(J in 1:envChgSteps){
-			file.copy(from=paste(hsMap,J,sep=""), to=paste(basename(hsMap),J,sep=""), overwrite=T)
-			if(exists(CreatedASCII)) CreatedASCII <- c(paste(basename(hsMap),J,".asc",sep=""), CreatedASCII) else CreatedASCII <- paste(basename(hsMap),J,".asc",sep="")
+			file.copy(from=paste(hsMap,J,".asc",sep=""), to=paste(basename(hsMap),J,".asc",sep=""), overwrite=T)
+			if(exists("CreatedASCII")) CreatedASCII <- c(paste(basename(hsMap),J,".asc",sep=""), CreatedASCII) else CreatedASCII <- paste(basename(hsMap),J,".asc",sep="")
 		}
 		hsMap <- basename(hsMap)    
 	}
     if(barrier!=""){
 		if(barrier!=basename(barrier)){
-			file.copy(from=barrier, to=basename(barrier), overwrite=T)
+			file.copy(from=paste(barrier,".asc",sep=""), to=paste(basename(barrier),".asc",sep=""), overwrite=T)
 			barrier <- basename(barrier)
-			if(exists(CreatedASCII)) CreatedASCII <- c(paste(barrier,".asc",sep=""), CreatedASCII) else CreatedASCII <- paste(barrier,".asc",sep="")
+			if(exists("CreatedASCII")) CreatedASCII <- c(paste(barrier,".asc",sep=""), CreatedASCII) else CreatedASCII <- paste(barrier,".asc",sep="")
 		}
     }
   }
@@ -283,7 +286,7 @@ MigClim.migrate <- function (iniDist="InitialDist", hsMap="HSmap", rcThreshold=0
   Rst <- raster(paste(iniDist,".asc",sep=""))
   nrRows <- nrow(Rst)
   nrCols <- ncol(Rst)
-  if(any(is.na(match(raster::unique(Rst), c(0,1))))) stop("Data input error: the 'iniDist' raster should contain only values of 0 or 1 \n")
+  if(any(is.na(match(raster::unique(Rst), c(0,1))))) stop("Data input error: the 'iniDist' raster should contain only values of 0 or 1. \n")
   #if(dataType(Rst)!="INT2U" & dataType(Rst)!="INT1U") stop("Data input error: the 'iniDist' layer must contain integer values (8 or 16-bit unsigned integers). The R 'dataType' code for 8-bit and 16-bit unsigned integers is 'INT1U' and 'INT2U'.")
   for(J in 1:envChgSteps){
     Rst <- raster(paste(hsMap,J,".asc",sep=""))
@@ -296,7 +299,7 @@ MigClim.migrate <- function (iniDist="InitialDist", hsMap="HSmap", rcThreshold=0
     Rst <- raster(paste(barrier,".asc",sep=""))
     #if(dataType(Rst)!="INT2U" & dataType(Rst)!="INT1U") stop("Data input error: the 'barrier' layer must contain integer values (8 or 16-bit unsigned integers). The R 'dataType' code for 8-bit and 16-bit unsigned integers is 'INT1U' and 'INT2U'.")
     if(nrow(Rst)!=nrRows | ncol(Rst)!=nrCols) stop("Data input error: not all your rasters input data have the same dimensions. \n")
-    if(any(is.na(match(raster::unique(Rst), c(0,1))))) stop("Data input error: the 'barrier' raster should contain only values of 0 or 1 \n")
+    if(any(is.na(match(raster::unique(Rst), c(0,1))))) stop("Data input error: the 'barrier' raster should contain only values of 0 or 1. \n")
     rm(Rst)
   }
 
@@ -304,7 +307,7 @@ MigClim.migrate <- function (iniDist="InitialDist", hsMap="HSmap", rcThreshold=0
 	  
   # Create output directory.
   if (file.exists(simulName)==T) unlink(simulName, recursive=T)
-  if (dir.create(simulName)==F) stop("unable to create a '", simulName,"'subdirectory in the current workspace. Make sure the '", simulName,"'subdirectory does not already exists and that you have write permission in the current workspace.")
+  if (dir.create(simulName)==F) stop("unable to create a '", simulName,"'subdirectory in the current workspace. Make sure the '", simulName,"'subdirectory does not already exists and that you have write permission in the current workspace.\n")
   
   # Write the "simulName_params.txt" file to disk.
   fileName <- paste(simulName, "/", simulName, "_params.txt", sep="")
