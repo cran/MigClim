@@ -13,7 +13,7 @@ MigClim.plot <- function(asciiFile, outDir="", fileFormat="jpeg", fullOutput=FAL
 	if(!file.exists(asciiFile)) stop("Input error: ", asciiFile, " could not be found.\n")
 	if(outDir!="") if(!file.exists(outDir)) stop("Input error: 'outDir' directory could not be found.\n")
 	
-	### load raster library
+	### load raster library (this is no longer needed, R does this automatically).
 	#if(require(raster, quietly=T)==F) stop("This function requires the 'raster' package. Please install 'raster' on your computer and try again.")
 	
 	### get root name and output directory

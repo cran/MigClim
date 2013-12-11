@@ -15,7 +15,7 @@ MigClim.migrate <- function (iniDist="InitialDist", hsMap="HSmap", rcThreshold=0
                              testMode=FALSE, fullOutput=FALSE, keepTempFiles=FALSE)
 {
   
-  # Verify that the user has installed the "raster" and "SDMTools" library on his machine.
+  # Verify that the user has installed the "raster" and "SDMTools" library on his machine (this is no longer needed, R does this automatically).
   #if(require(raster, quietly=T)==F) stop("This function requires the 'raster' package. Please install 'raster' on your computer and try again.")
   #if(require(SDMTools, quietly=T)==F) stop("This function requires the 'SDMTools' package. Please install 'SDMTools' on your computer and try again.")
 
@@ -355,7 +355,7 @@ MigClim.migrate <- function (iniDist="InitialDist", hsMap="HSmap", rcThreshold=0
   
   # If the user has set replicateNb > 1 then we generate a final, averaged, output.
   # The individual outputs are conserved, though.
-  if(replicateNb>1){
+  if(replicateNb>1 & !testMode){
 	  
 	  #Average the "_stats.txt" files 
 	  statsFile <- read.table(paste(simulName,"/",simulName,"1_stats.txt",sep=""), header=T, as.is=T)
