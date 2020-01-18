@@ -87,7 +87,7 @@ The function output(s) will be written in ascii GRID format (with .asc extension
   
 \dontrun{  ### Convert data from a dataframe to ASCII grid format
   library(SDMTools)
-  dataframe2asc(MigClim.testData[,c(2,1,3:9)])
+  SDMTools::dataframe2asc(MigClim.testData[,c(2,1,3:9)])
   ### and then run MigClim with "raster" type input.
   n<-MigClim.migrate (iniDist="InitialDist",
      hsMap="HSmap", rcThreshold=500, 
@@ -96,5 +96,8 @@ The function output(s) will be written in ascii GRID format (with .asc extension
      iniMatAge=1, propaguleProd=c(0.01,0.08,0.5,0.92), 
      lddFreq=0.1, lddMinDist=6, lddMaxDist=15, 
      simulName="MigClimTest", replicateNb=1, overWrite=TRUE, 
-     testMode=FALSE, fullOutput=FALSE, keepTempFiles=FALSE)}}
+     testMode=FALSE, fullOutput=FALSE, keepTempFiles=FALSE)
+}
 
+unlink("MigClimTest")
+}

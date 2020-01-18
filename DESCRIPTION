@@ -1,16 +1,20 @@
 Package: MigClim
-Version: 1.6
+Version: 1.6.1
 Date: 2013-12-11
-Title: Implementing dispersal into species distribution models
+Title: Implementing Dispersal into Species Distribution Models
 Author: Robin Engler <robin.engler@gmail.com> and
              Wim Hordijk <wim@WorldWideWanderings.net> and
              Loic Pellissier <loic.pellissier@unil.ch>
-Maintainer: Robin Engler <robin.engler@gmail.com>
-Depends: SDMTools, raster
+Maintainer: ORPHANED
+Imports: raster
+Suggests: SDMTools
 Description: Functions for implementing species dispersal into projections
              of species distribution models (e.g. under climate change scenarios).
 License: GPL
-Packaged: 2013-12-11 12:55:03 UTC; robin
+Packaged: 2020-01-18 16:38:12 UTC; ripley
 NeedsCompilation: yes
+X-CRAN-Original-Maintainer: Robin Engler <robin.engler@gmail.com>
+X-CRAN-Comment: Orphaned and corrected on 2020-01-18 as maintainer was
+        unresponsive.
 Repository: CRAN
-Date/Publication: 2013-12-23 13:10:10
+Date/Publication: 2020-01-18 17:40:46

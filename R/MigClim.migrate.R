@@ -183,9 +183,9 @@ MigClim.migrate <- function (iniDist="InitialDist", hsMap="HSmap", rcThreshold=0
 	
 	### Convert data frames to ascii grid files.
 	CreatedASCII <- paste(simulName, c("InitialDist.asc", paste("HSmap", 1:envChgSteps, ".asc", sep="")), sep=".")
-	dataframe2asc(cbind(iniDist[,c(2,1,3)], hsMap), outdir=getwd(), filenames=CreatedASCII, gz=FALSE)
+	SDMTools::dataframe2asc(cbind(iniDist[,c(2,1,3)], hsMap), outdir=getwd(), filenames=CreatedASCII, gz=FALSE)
 	if(useBarrier){
-		dataframe2asc(cbind(iniDist[,c(2,1)], barrier), outdir=getwd(), filenames=paste(simulName, ".Barrier", sep=""), gz=FALSE)
+		SDMTools::dataframe2asc(cbind(iniDist[,c(2,1)], barrier), outdir=getwd(), filenames=paste(simulName, ".Barrier", sep=""), gz=FALSE)
 		CreatedASCII <- c(CreatedASCII, paste(simulName, ".Barrier.asc", sep=""))
 		barrier <- paste(simulName, ".Barrier", sep="")
 	}

@@ -4,3 +4,9 @@ export(MigClim.plot)
 export(MigClim.userGuide)
 export(MigClim.genClust)
 export(MigClim.validate)
+
+importFrom("grDevices", "dev.new", "dev.off", "jpeg", "png", "rainbow")
+importFrom("graphics", "image", "plot")
+importFrom("utils", "read.table", "write.table")
+importFrom("raster", "cellStats", "raster", "writeRaster", 
+           "xmax", "xmin", "ymax", "ymin")

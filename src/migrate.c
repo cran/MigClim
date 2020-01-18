@@ -9,7 +9,8 @@
 /*
 ** Global variables, so we won't have to pass too many arguments all the time.
 */
-int     nrRows, nrCols, envChgSteps, dispSteps, dispDist, iniMatAge,
+int     /* nrRows, nrCols, also in genclust */ 
+        envChgSteps, dispSteps, dispDist, iniMatAge,
         fullMatAge, rcThreshold, barrierType, lddMinDist, lddMaxDist,
         replicateNb;
 double *dispKernel, *propaguleProd, lddFreq;
