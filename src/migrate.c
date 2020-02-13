@@ -149,7 +149,7 @@ void mcMigrate (char **paramFile, int *nrFiles)
   }
   
   /* We'll use 'srand' and 'rand' here, as 'srandom' and 'random' do not work on Windows :-( */
-  srand (time (NULL));
+  srand ((unsigned int)time (NULL));
 
   /* Allocate the necessary memory. */
   currentState = (int **)malloc (nrRows * sizeof (int *));
@@ -600,7 +600,7 @@ void mcMigrate (char **paramFile, int *nrFiles)
     }
   
     /* Write summary output to file. */
-    simulTime = time (NULL) - startTime;
+    simulTime = (int)(time (NULL) - startTime);
     sprintf(fileName, "%s/%s_summary.txt", simulName, simulName2);
     if((fp2 = fopen (fileName, "w")) != NULL){
       fprintf(fp2, "simulName\tiniCount\tnoDispCount\tunivDispCount\toccupiedCount\tabsentCount\ttotColonized\ttotDecolonized\ttotLDDsuccess\trunTime\n");

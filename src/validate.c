@@ -128,8 +128,8 @@ void validate (char **obsFileName, int *npts, char **simFileName, int *ncls,
 	{
 	  x = col;
 	  y = (nrRows-1) - row;
-	  c0 = xllCorner + (x*cellSize) + (cellSize/2.0);
-	  c1 = yllCorner + (y*cellSize) + (cellSize/2.0);
+	  double c0 = xllCorner + (x*cellSize) + (cellSize/2.0);
+	  double c1 = yllCorner + (y*cellSize) + (cellSize/2.0);
 	  dist = sqrt ((coord[0][i]-c0)*(coord[0][i]-c0) +
 		       (coord[1][i]-c1)*(coord[1][i]-c1));
 	  if (dist < minDist)
